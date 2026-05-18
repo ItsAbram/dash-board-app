@@ -1,8 +1,8 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #eaf7ff;
+  --foreground: #0b3558;
 }
 
 @theme inline {
@@ -14,8 +14,8 @@
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --background: #eaf7ff;
+    --foreground: #0b3558;
   }
 }
 
@@ -38,29 +38,29 @@ button {
   min-height: 42px;
   width: 100%;
   min-width: 0;
-  border: 1px solid #2b302c;
-  background: #080a0a;
+  border: 1px solid #9ccfed;
+  background: #eaf7ff;
   padding: 0 10px;
-  color: #f2f0e8;
+  color: #0b3558;
   outline: none;
 }
 
 .field:focus {
-  border-color: #d8ff63;
+  border-color: #0284c7;
   box-shadow: 0 0 0 2px rgba(216, 255, 99, 0.18);
 }
 
 .action {
   min-height: 42px;
-  background: #d8ff63;
-  color: #080a0a;
+  background: #0284c7;
+  color: #eaf7ff;
   font-weight: 900;
 }
 
 .outline-action {
   min-height: 40px;
-  border: 1px solid #d8ff63;
-  color: #d8ff63;
+  border: 1px solid #0284c7;
+  color: #0284c7;
   font-size: 0.76rem;
   font-weight: 900;
   text-transform: uppercase;

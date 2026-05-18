@@ -46,15 +46,15 @@ export function ControlPanel({
   onSaveCloud,
 }: ControlPanelProps) {
   return (
-    <aside className="grid content-start gap-3 overflow-auto border-[#d8ff63]/40 bg-[#080a0a]/95 p-3">
-      <header className="grid grid-cols-[1fr_auto] gap-3 border-b border-[#2b302c] pb-3">
+    <aside className="grid content-start gap-3 overflow-auto border-[#0284c7]/40 bg-[#eaf7ff]/95 p-3">
+      <header className="grid grid-cols-[1fr_auto] gap-3 border-b border-[#9ccfed] pb-3">
         <div>
-          <p className="text-xs font-black uppercase tracking-wide text-[#d8ff63]">Live Layer</p>
+          <p className="text-xs font-black uppercase tracking-wide text-[#0284c7]">Live Layer</p>
           <h1 className="text-3xl font-black uppercase leading-none">Dash Board</h1>
         </div>
         <div className="text-right">
-          <p className="text-xs font-bold uppercase text-[#8f948d]">{todayLabel}</p>
-          <strong className="text-2xl font-black text-[#d8ff63]">{stats.score}%</strong>
+          <p className="text-xs font-bold uppercase text-[#44789a]">{todayLabel}</p>
+          <strong className="text-2xl font-black text-[#0284c7]">{stats.score}%</strong>
         </div>
       </header>
 
@@ -115,8 +115,8 @@ export function ControlPanel({
         </div>
       </Panel>
 
-      <footer className="grid gap-2 border border-[#2b302c] bg-[#0b0d0d] p-3">
-        <p className="text-xs text-[#8f948d]">{status}</p>
+      <footer className="grid gap-2 border border-[#9ccfed] bg-[#d8efff] p-3">
+        <p className="text-xs text-[#44789a]">{status}</p>
         <div className="grid grid-cols-2 gap-2">
           <button className="outline-action" type="button" onClick={onLoadCloud}>
             Load Cloud

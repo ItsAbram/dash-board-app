@@ -8,9 +8,9 @@ type ToggleListItemProps = {
 
 export function ToggleListItem({ title, meta, done, onToggle, onDelete }: ToggleListItemProps) {
   return (
-    <div className="grid min-h-12 grid-cols-[30px_1fr_28px] items-center gap-2 border border-[#2b302c] bg-[#080a0a] p-2">
+    <div className="grid min-h-12 grid-cols-[30px_1fr_28px] items-center gap-2 border border-[#9ccfed] bg-[#eaf7ff] p-2">
       <button
-        className={`h-[30px] font-black ${done ? "bg-[#d8ff63] text-[#080a0a]" : "bg-[#171c19] text-[#d8ff63]"}`}
+        className={`h-[30px] font-black ${done ? "bg-[#0284c7] text-[#eaf7ff]" : "bg-[#b9e2f7] text-[#0284c7]"}`}
         type="button"
         onClick={onToggle}
         aria-label={done ? "Mark incomplete" : "Mark complete"}
@@ -18,10 +18,10 @@ export function ToggleListItem({ title, meta, done, onToggle, onDelete }: Toggle
         {done ? "OK" : ""}
       </button>
       <div className="min-w-0">
-        <p className={`break-words text-sm font-bold ${done ? "text-[#8f948d] line-through" : ""}`}>{title}</p>
-        <span className="text-[11px] uppercase text-[#8f948d]">{meta}</span>
+        <p className={`break-words text-sm font-bold ${done ? "text-[#44789a] line-through" : ""}`}>{title}</p>
+        <span className="text-[11px] uppercase text-[#44789a]">{meta}</span>
       </div>
-      <button className="h-7 text-lg text-[#ff6d7a]" type="button" onClick={onDelete} aria-label={`Delete ${title}`}>
+      <button className="h-7 text-lg text-[#0369a1]" type="button" onClick={onDelete} aria-label={`Delete ${title}`}>
         x
       </button>
     </div>

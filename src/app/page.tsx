@@ -148,8 +148,8 @@ export default function Home() {
   }
 
   return (
-    <main className="min-h-screen bg-[#080a0a] px-3 py-3 font-mono text-[#f2f0e8]">
-      <section className="mx-auto grid min-h-[calc(100vh-24px)] max-w-7xl grid-rows-[auto_1fr] border border-[#2b302c] bg-[#0b0d0d] lg:grid-cols-[1fr_390px] lg:grid-rows-1">
+    <main className="min-h-screen bg-[#eaf7ff] px-3 py-3 font-mono text-[#0b3558]">
+      <section className="mx-auto grid min-h-[calc(100vh-24px)] max-w-7xl grid-rows-[auto_1fr] border border-[#9ccfed] bg-[#d8efff] lg:grid-cols-[1fr_390px] lg:grid-rows-1">
         <OperatorCanvas cloudReady={Boolean(supabase)} focus={state.focus[todayKey] || ""} stats={stats} todayLabel={todayLabel} />
         <ControlPanel
           habitTitle={habitTitle}
