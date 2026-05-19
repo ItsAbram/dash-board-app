@@ -17,6 +17,8 @@ export default function Home() {
   const [taskTitle, setTaskTitle] = useState("");
   const [status, setStatus] = useState("Local memory ready.");
   const [isLoaded, setIsLoaded] = useState(false);
+  const [hasLoadedCloud, setHasLoadedCloud] = useState(false);
+  const [lastSavedState, setLastSavedState] = useState("");
   const [selectedDateKey, setSelectedDateKey] = useState(todayKey);
   const [calendarMode, setCalendarMode] = useState<CalendarMode>("week");
   const [session, setSession] = useState<Session | null>(null);
@@ -60,6 +62,44 @@ export default function Home() {
       window.localStorage.setItem(localStorageKey, JSON.stringify(state));
     }
   }, [isLoaded, state]);
+
+  useEffect(() => {
+    if (!session?.user) {
+      const timeout = window.setTimeout(() => {
+        setHasLoadedCloud(false);
+        setLastSavedState("");
+      }, 0);
+      return () => window.clearTimeout(timeout);
+    }
+
+    const userId = session.user.id;
+    const timeout = window.setTimeout(() => {
+      loadCloudForUser(userId);
+    }, 0);
+    return () => {
+      window.clearTimeout(timeout);
+    };
+  }, [session]);
+
+  useEffect(() => {
+    if (!session?.user || !isLoaded || !hasLoadedCloud) return;
+
+    const userId = session.user.id;
+    const serialized = JSON.stringify(state);
+    if (serialized === lastSavedState) return;
+
+    const statusTimeout = window.setTimeout(() => {
+      setStatus("Local changes.");
+    }, 0);
+    const saveTimeout = window.setTimeout(() => {
+      saveCloudForUser(userId, state, serialized);
+    }, 900);
+
+    return () => {
+      window.clearTimeout(statusTimeout);
+      window.clearTimeout(saveTimeout);
+    };
+  }, [hasLoadedCloud, isLoaded, lastSavedState, session, state]);
 
   const todayLabel = useMemo(() => formatLongDate(todayKey), []);
   const selectedDateLabel = useMemo(() => formatLongDate(selectedDateKey), [selectedDateKey]);
@@ -170,47 +210,66 @@ export default function Home() {
     setStatus(error ? `Sign out failed: ${error.message}` : "Signed out.");
   }
 
-  async function saveCloud() {
+  async function saveCloudForUser(userId: string, nextState: DashboardState, serialized = JSON.stringify(nextState)) {
     if (!supabase) {
       setStatus("Add Supabase env vars, then restart the dev server.");
       return;
     }
+
+    setStatus("Saving...");
+    const { error } = await supabase
+      .from("dashboard_state")
+      .upsert({ id: userId, user_id: userId, data: nextState, updated_at: new Date().toISOString() });
+
+    if (error) {
+      setStatus(`Save failed: ${error.message}`);
+      return;
+    }
+
+    setLastSavedState(serialized);
+    setStatus("Saved.");
+  }
+
+  async function loadCloudForUser(userId: string) {
+    if (!supabase) {
+      setStatus("Add Supabase env vars, then restart the dev server.");
+      return;
+    }
+
+    setStatus("Loading cloud data...");
+    const { data, error } = await supabase.from("dashboard_state").select("data").eq("id", userId).maybeSingle();
+    if (error) {
+      setStatus(`Load failed: ${error.message}`);
+      setHasLoadedCloud(true);
+      return;
+    }
+    if (!data?.data) {
+      setStatus("No cloud save yet. Local state ready.");
+      setHasLoadedCloud(true);
+      return;
+    }
+
+    const nextState = normalizeState(data.data);
+    setState(nextState);
+    setLastSavedState(JSON.stringify(nextState));
+    setHasLoadedCloud(true);
+    setStatus("Loaded from cloud.");
+  }
+
+  async function saveCloud() {
     if (!session?.user) {
       setStatus("Sign in before saving to cloud.");
       return;
     }
-
-    setStatus("Saving to Supabase...");
-    const { error } = await supabase
-      .from("dashboard_state")
-      .upsert({ id: session.user.id, user_id: session.user.id, data: state, updated_at: new Date().toISOString() });
-
-    setStatus(error ? `Cloud save failed: ${error.message}` : "Saved to Supabase.");
+    await saveCloudForUser(session.user.id, state);
   }
 
   async function loadCloud() {
-    if (!supabase) {
-      setStatus("Add Supabase env vars, then restart the dev server.");
-      return;
-    }
     if (!session?.user) {
       setStatus("Sign in before loading cloud data.");
       return;
     }
-
-    setStatus("Loading from Supabase...");
-    const { data, error } = await supabase.from("dashboard_state").select("data").eq("id", session.user.id).maybeSingle();
-    if (error) {
-      setStatus(`Cloud load failed: ${error.message}`);
-      return;
-    }
-    if (!data?.data) {
-      setStatus("No cloud save found yet.");
-      return;
-    }
-
-    setState(normalizeState(data.data));
-    setStatus("Loaded from Supabase.");
+    await loadCloudForUser(session.user.id);
   }
 
   function authMessage(message: string) {

@@ -178,10 +178,13 @@ export function DashboardWorkspace({
       </section>
 
       <footer className="grid gap-2 rounded-lg border border-[#3a3a3a] bg-[#1f1f1f] p-3 md:grid-cols-[1fr_auto] md:items-center">
-        <p className="text-xs uppercase text-[#a1a1aa]">{status}</p>
+        <div>
+          <p className="text-xs font-black uppercase tracking-wide text-[#f59e0b]">Sync</p>
+          <p className="mt-1 text-xs uppercase text-[#a1a1aa]">{status}</p>
+        </div>
         <div className="grid grid-cols-2 gap-2">
-          <button className="outline-action px-3" type="button" onClick={onLoadCloud}>Load Cloud</button>
-          <button className="outline-action px-3" type="button" onClick={onSaveCloud}>Save Cloud</button>
+          <button className="outline-action px-3" type="button" onClick={onLoadCloud}>Manual Load</button>
+          <button className="outline-action px-3" type="button" onClick={onSaveCloud}>Manual Save</button>
         </div>
       </footer>
 
