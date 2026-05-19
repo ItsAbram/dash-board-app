@@ -512,15 +512,16 @@ export default function HealthPage() {
                   <button className="outline-action px-3" onClick={() => markSession("skipped")} type="button">
                     Mark Skipped
                   </button>
-                  <button className="action px-3" onClick={() => markSession("complete")} type="button">
-                    Mark Complete
-                  </button>
+                  {selectedCompletion ? (
+                    <button className="outline-action border-[#ef4444] px-3 text-[#ef4444]" onClick={unmarkSession} type="button">
+                      Unmark Session
+                    </button>
+                  ) : (
+                    <button className="action px-3" onClick={() => markSession("complete")} type="button">
+                      Mark Complete
+                    </button>
+                  )}
                 </div>
-                {selectedCompletion ? (
-                  <button className="outline-action border-[#ef4444] px-3 text-[#ef4444]" onClick={unmarkSession} type="button">
-                    Unmark Session
-                  </button>
-                ) : null}
               </>
             ) : (
               <p className="rounded-lg border border-[#3a3a3a] bg-[#151515] p-4 text-sm uppercase leading-relaxed text-[#a1a1aa]">Select a synced session to start checking it off.</p>
