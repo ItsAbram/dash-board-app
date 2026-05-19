@@ -1,5 +1,6 @@
 "use client";
 
+import { AuthPanel } from "@/components/auth/AuthPanel";
 import { DashboardWorkspace } from "@/components/dashboard/DashboardWorkspace";
 import { buildCalendarDays, formatLongDate, shiftCalendar } from "@/lib/calendar";
 import { createId, createStarterState, localStorageKey, normalizeState, todayKey } from "@/lib/dashboard-state";
@@ -21,6 +22,8 @@ export default function Home() {
   const [session, setSession] = useState<Session | null>(null);
   const [authEmail, setAuthEmail] = useState("");
   const [authPassword, setAuthPassword] = useState("");
+  const [authStatus, setAuthStatus] = useState("Use your email and password to open the dashboard.");
+  const [authBusy, setAuthBusy] = useState(false);
 
   useEffect(() => {
     window.setTimeout(() => {
@@ -127,27 +130,43 @@ export default function Home() {
 
   async function signUp() {
     if (!supabase) {
-      setStatus("Supabase env vars are missing.");
+      setAuthStatus("Supabase env vars are missing.");
+      return;
+    }
+    if (!authEmail.trim() || !authPassword) {
+      setAuthStatus("Enter an email and password first.");
       return;
     }
 
+    setAuthBusy(true);
+    setAuthStatus("Creating account...");
     const { error } = await supabase.auth.signUp({ email: authEmail.trim(), password: authPassword });
-    setStatus(error ? `Sign up failed: ${error.message}` : "Account created. Check email if confirmation is enabled.");
+    setAuthBusy(false);
+    setAuthStatus(error ? authMessage(error.message) : "Account created. If email confirmation is enabled, check your inbox before signing in.");
   }
 
   async function signIn() {
     if (!supabase) {
-      setStatus("Supabase env vars are missing.");
+      setAuthStatus("Supabase env vars are missing.");
+      return;
+    }
+    if (!authEmail.trim() || !authPassword) {
+      setAuthStatus("Enter an email and password first.");
       return;
     }
 
+    setAuthBusy(true);
+    setAuthStatus("Signing in...");
     const { error } = await supabase.auth.signInWithPassword({ email: authEmail.trim(), password: authPassword });
-    setStatus(error ? `Sign in failed: ${error.message}` : "Signed in.");
+    setAuthBusy(false);
+    setAuthStatus(error ? authMessage(error.message) : "Signed in.");
   }
 
   async function signOut() {
     if (!supabase) return;
+    setAuthBusy(true);
     const { error } = await supabase.auth.signOut();
+    setAuthBusy(false);
     setStatus(error ? `Sign out failed: ${error.message}` : "Signed out.");
   }
 
@@ -194,12 +213,52 @@ export default function Home() {
     setStatus("Loaded from Supabase.");
   }
 
+  function authMessage(message: string) {
+    if (message.toLowerCase().includes("email not confirmed")) {
+      return "Email is not confirmed. Check your inbox, or turn off email confirmations in Supabase while testing.";
+    }
+    if (message.toLowerCase().includes("security purposes")) {
+      return "Supabase is rate limiting signup. Wait 10 seconds, then try again.";
+    }
+    return message;
+  }
+
+  if (!session?.user) {
+    return (
+      <main className="min-h-screen bg-[#111111] px-3 py-3 font-mono text-[#f4f4f5]">
+        <section className="mx-auto grid min-h-[calc(100vh-24px)] max-w-xl content-center gap-3 rounded-lg border border-[#3a3a3a] bg-[#111111] p-3">
+          <header className="rounded-lg border border-[#3a3a3a] bg-[#1f1f1f] p-4">
+            <p className="text-xs font-black uppercase tracking-wide text-[#f59e0b]">Private Dashboard</p>
+            <h1 className="mt-2 text-4xl font-black uppercase leading-none">Sign In</h1>
+            <p className="mt-3 text-sm uppercase leading-relaxed text-[#a1a1aa]">
+              This dashboard is private. Sign in before loading calendar, habits, tasks, and cloud memory.
+            </p>
+          </header>
+          <AuthPanel
+            email={authEmail}
+            isBusy={authBusy}
+            isSignedIn={false}
+            onEmailChange={setAuthEmail}
+            onPasswordChange={setAuthPassword}
+            onSignIn={signIn}
+            onSignOut={signOut}
+            onSignUp={signUp}
+            password={authPassword}
+            status={authStatus}
+          />
+        </section>
+      </main>
+    );
+  }
+
   return (
     <main className="min-h-screen bg-[#111111] px-3 py-3 font-mono text-[#f4f4f5]">
       <div className="mx-auto min-h-[calc(100vh-24px)] max-w-7xl rounded-lg border border-[#3a3a3a] bg-[#111111] p-3">
         <DashboardWorkspace
           authEmail={authEmail}
+          authBusy={authBusy}
           authPassword={authPassword}
+          authStatus={authStatus}
           calendarDays={calendarDays}
           calendarMode={calendarMode}
           cloudReady={Boolean(supabase)}

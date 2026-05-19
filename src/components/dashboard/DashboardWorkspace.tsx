@@ -22,6 +22,8 @@ type DashboardWorkspaceProps = {
   cloudReady: boolean;
   authEmail: string;
   authPassword: string;
+  authStatus: string;
+  authBusy: boolean;
   userEmail?: string;
   isSignedIn: boolean;
   onAuthEmailChange: (value: string) => void;
@@ -61,6 +63,8 @@ export function DashboardWorkspace({
   cloudReady,
   authEmail,
   authPassword,
+  authStatus,
+  authBusy,
   userEmail,
   isSignedIn,
   onAuthEmailChange,
@@ -183,6 +187,7 @@ export function DashboardWorkspace({
 
       <AuthPanel
         email={authEmail}
+        isBusy={authBusy}
         isSignedIn={isSignedIn}
         onEmailChange={onAuthEmailChange}
         onPasswordChange={onAuthPasswordChange}
@@ -190,6 +195,7 @@ export function DashboardWorkspace({
         onSignOut={onSignOut}
         onSignUp={onSignUp}
         password={authPassword}
+        status={authStatus}
         userEmail={userEmail}
       />
     </section>
