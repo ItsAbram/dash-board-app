@@ -1,11 +1,10 @@
 "use client";
 
-import { ControlPanel } from "@/components/dashboard/ControlPanel";
-import { OperatorCanvas } from "@/components/dashboard/OperatorCanvas";
-import { buildCalendarDays, formatLongDate, shiftDateKey } from "@/lib/calendar";
+import { DashboardWorkspace } from "@/components/dashboard/DashboardWorkspace";
+import { buildCalendarDays, formatLongDate, shiftCalendar } from "@/lib/calendar";
 import { cloudRowId, createId, createStarterState, localStorageKey, normalizeState, todayKey } from "@/lib/dashboard-state";
 import { supabase } from "@/lib/supabase-client";
-import { DashboardState } from "@/types/dashboard";
+import { CalendarMode, DashboardState } from "@/types/dashboard";
 import { FormEvent, useEffect, useMemo, useState } from "react";
 
 const starterState = createStarterState();
@@ -17,6 +16,7 @@ export default function Home() {
   const [status, setStatus] = useState("Local memory ready.");
   const [isLoaded, setIsLoaded] = useState(false);
   const [selectedDateKey, setSelectedDateKey] = useState(todayKey);
+  const [calendarMode, setCalendarMode] = useState<CalendarMode>("week");
 
   useEffect(() => {
     window.setTimeout(() => {
@@ -40,7 +40,7 @@ export default function Home() {
 
   const todayLabel = useMemo(() => formatLongDate(todayKey), []);
   const selectedDateLabel = useMemo(() => formatLongDate(selectedDateKey), [selectedDateKey]);
-  const calendarDays = useMemo(() => buildCalendarDays(selectedDateKey, state), [selectedDateKey, state]);
+  const calendarDays = useMemo(() => buildCalendarDays(selectedDateKey, state, calendarMode), [calendarMode, selectedDateKey, state]);
   const dayTasks = useMemo(() => state.tasks.filter((task) => task.dateKey === selectedDateKey), [selectedDateKey, state.tasks]);
 
   const stats = useMemo(() => {
@@ -146,27 +146,23 @@ export default function Home() {
 
   return (
     <main className="min-h-screen bg-[#eaf7ff] px-3 py-3 font-mono text-[#0b3558]">
-      <section className="mx-auto grid min-h-[calc(100vh-24px)] max-w-7xl grid-rows-[auto_1fr] border border-[#9ccfed] bg-[#d8efff] lg:grid-cols-[1fr_390px] lg:grid-rows-1">
-        <OperatorCanvas
-          cloudReady={Boolean(supabase)}
-          focus={state.focus[selectedDateKey] || ""}
-          selectedDateLabel={selectedDateLabel}
-          stats={stats}
-          todayLabel={todayLabel}
-        />
-        <ControlPanel
+      <div className="mx-auto min-h-[calc(100vh-24px)] max-w-7xl border border-[#9ccfed] bg-[#eaf7ff] p-3">
+        <DashboardWorkspace
           calendarDays={calendarDays}
+          calendarMode={calendarMode}
+          cloudReady={Boolean(supabase)}
           dayTasks={dayTasks}
           habitTitle={habitTitle}
           onAddHabit={addHabit}
           onAddTask={addTask}
+          onCalendarModeChange={setCalendarMode}
           onDeleteHabit={deleteHabit}
           onDeleteTask={deleteTask}
           onFocusChange={setFocus}
           onHabitTitleChange={setHabitTitle}
           onLoadCloud={loadCloud}
-          onNextWeek={() => setSelectedDateKey((current) => shiftDateKey(current, 7))}
-          onPreviousWeek={() => setSelectedDateKey((current) => shiftDateKey(current, -7))}
+          onNextCalendar={() => setSelectedDateKey((current) => shiftCalendar(current, calendarMode, 1))}
+          onPreviousCalendar={() => setSelectedDateKey((current) => shiftCalendar(current, calendarMode, -1))}
           onSaveCloud={saveCloud}
           onSelectDay={setSelectedDateKey}
           onTaskTitleChange={setTaskTitle}
@@ -174,14 +170,14 @@ export default function Home() {
           onToggleHabit={toggleHabit}
           onToggleTask={toggleTask}
           selectedDateLabel={selectedDateLabel}
+          selectedDateKey={selectedDateKey}
           state={state}
           stats={stats}
           status={status}
           taskTitle={taskTitle}
-          todayKey={selectedDateKey}
           todayLabel={todayLabel}
         />
-      </section>
+      </div>
     </main>
   );
 }

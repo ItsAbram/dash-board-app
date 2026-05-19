@@ -1,4 +1,4 @@
-import { CalendarDay, DashboardState } from "@/types/dashboard";
+import { CalendarDay, CalendarMode, DashboardState } from "@/types/dashboard";
 
 const dayFormatter = new Intl.DateTimeFormat(undefined, { weekday: "short" });
 const monthFormatter = new Intl.DateTimeFormat(undefined, { month: "short" });
@@ -18,19 +18,13 @@ export function formatLongDate(dateKey: string) {
   }).format(new Date(`${dateKey}T12:00:00`));
 }
 
-export function shiftDateKey(dateKey: string, amount: number) {
-  const date = new Date(`${dateKey}T12:00:00`);
-  date.setDate(date.getDate() + amount);
-  return toDateKey(date);
-}
-
-export function buildCalendarDays(selectedDateKey: string, state: DashboardState): CalendarDay[] {
+export function buildCalendarDays(selectedDateKey: string, state: DashboardState, mode: CalendarMode): CalendarDay[] {
   const selectedDate = new Date(`${selectedDateKey}T12:00:00`);
-  const start = new Date(selectedDate);
-  start.setDate(selectedDate.getDate() - 3);
+  const start = getCalendarStart(selectedDate, mode);
+  const dayCount = mode === "month" ? getMonthGridDayCount(start, selectedDate) : 7;
   const today = toDateKey(new Date());
 
-  return Array.from({ length: 7 }, (_, index) => {
+  return Array.from({ length: dayCount }, (_, index) => {
     const date = new Date(start);
     date.setDate(start.getDate() + index);
     const key = toDateKey(date);
@@ -48,4 +42,31 @@ export function buildCalendarDays(selectedDateKey: string, state: DashboardState
       taskCount: state.tasks.filter((task) => task.dateKey === key).length,
     };
   });
+}
+
+export function shiftCalendar(dateKey: string, mode: CalendarMode, amount: number) {
+  const date = new Date(`${dateKey}T12:00:00`);
+  if (mode === "month") {
+    date.setMonth(date.getMonth() + amount);
+    return toDateKey(date);
+  }
+  date.setDate(date.getDate() + amount * 7);
+  return toDateKey(date);
+}
+
+function getCalendarStart(selectedDate: Date, mode: CalendarMode) {
+  const start = new Date(selectedDate);
+  if (mode === "month") {
+    start.setDate(1);
+    start.setDate(start.getDate() - start.getDay());
+    return start;
+  }
+  start.setDate(selectedDate.getDate() - selectedDate.getDay());
+  return start;
+}
+
+function getMonthGridDayCount(start: Date, selectedDate: Date) {
+  const end = new Date(selectedDate.getFullYear(), selectedDate.getMonth() + 1, 0, 12);
+  end.setDate(end.getDate() + (6 - end.getDay()));
+  return Math.round((end.getTime() - start.getTime()) / 86400000) + 1;
 }

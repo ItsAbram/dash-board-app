@@ -36,3 +36,5 @@ export type CalendarDay = {
   score: number;
   taskCount: number;
 };
+
+export type CalendarMode = "week" | "month";
