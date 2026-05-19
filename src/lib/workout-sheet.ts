@@ -17,21 +17,7 @@ const requiredHeaders = {
 };
 
 export async function readWorkoutSheet() {
-  const email = process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL;
-  const key = process.env.GOOGLE_PRIVATE_KEY?.replace(/\\n/g, "\n");
-  const spreadsheetId = process.env.GOOGLE_WORKOUT_SHEET_ID;
-
-  if (!email || !key || !spreadsheetId) {
-    throw new Error("Missing Google Sheets env vars.");
-  }
-
-  const auth = new google.auth.JWT({
-    email,
-    key,
-    scopes: ["https://www.googleapis.com/auth/spreadsheets.readonly"],
-  });
-
-  const sheets = google.sheets({ version: "v4", auth });
+  const { sheets, spreadsheetId } = getWorkoutSheetsClient();
   const response = await sheets.spreadsheets.values.batchGet({
     spreadsheetId,
     ranges: ["Blocks!A:F", "Sessions!A:I", "Exercises!A:H"],
@@ -44,6 +30,44 @@ export async function readWorkoutSheet() {
   }
 
   return parseWorkoutSheet(rows);
+}
+
+export async function appendWorkoutCompletion(row: {
+  completed_at: string;
+  session_id: string;
+  status: "complete" | "skipped";
+  notes: string;
+  completed_exercises: string[];
+}) {
+  const { sheets, spreadsheetId } = getWorkoutSheetsClient();
+  await sheets.spreadsheets.values.append({
+    spreadsheetId,
+    range: "Completions!A:E",
+    valueInputOption: "USER_ENTERED",
+    insertDataOption: "INSERT_ROWS",
+    requestBody: {
+      values: [[row.completed_at, row.session_id, row.status, row.notes, row.completed_exercises.join(", ")]],
+    },
+  });
+}
+
+function getWorkoutSheetsClient() {
+  const email = process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL;
+  const key = process.env.GOOGLE_PRIVATE_KEY?.replace(/\\n/g, "\n");
+  const spreadsheetId = process.env.GOOGLE_WORKOUT_SHEET_ID;
+
+  if (!email || !key || !spreadsheetId) {
+    throw new Error("Missing Google Sheets env vars.");
+  }
+
+  const auth = new google.auth.JWT({
+    email,
+    key,
+    scopes: ["https://www.googleapis.com/auth/spreadsheets"],
+  });
+
+  const sheets = google.sheets({ version: "v4", auth });
+  return { sheets, spreadsheetId };
 }
 
 export function parseWorkoutSheet(rows: SheetRows): ParsedWorkoutSheet {

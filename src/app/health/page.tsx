@@ -145,28 +145,37 @@ export default function HealthPage() {
   }
 
   async function markSession(statusValue: "complete" | "skipped") {
-    if (!supabase || !session?.user || !selectedSession) return;
+    if (!session?.access_token || !session.user || !selectedSession) return;
 
-    const completion: WorkoutSessionCompletion = {
-      user_id: session.user.id,
-      session_id: selectedSession.session_id,
-      status: statusValue,
-      completed_at: new Date().toISOString(),
-      notes: completionNotes,
-      updated_at: new Date().toISOString(),
-    };
+    const completedExercises = selectedExercises
+      .filter((exercise) => data.exerciseCompletions.some((completion) => completion.exercise_id === exercise.exercise_id && completion.done))
+      .map((exercise) => exercise.exercise_id);
 
-    const { error } = await supabase.from("workout_session_completions").upsert(completion, { onConflict: "user_id,session_id" });
-    if (error) {
-      setStatus(`Save failed: ${error.message}`);
+    const response = await fetch("/api/workouts/complete", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${session.access_token}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        session_id: selectedSession.session_id,
+        status: statusValue,
+        notes: completionNotes,
+        completed_exercises: completedExercises,
+      }),
+    });
+    const result = (await response.json()) as { ok?: boolean; completion?: WorkoutSessionCompletion; error?: string };
+
+    if (!response.ok || !result.ok || !result.completion) {
+      setStatus(`Save failed: ${result.error ?? "Unknown error"}`);
       return;
     }
 
     setData((current) => ({
       ...current,
-      sessionCompletions: [...current.sessionCompletions.filter((item) => item.session_id !== selectedSession.session_id), completion],
+      sessionCompletions: [...current.sessionCompletions.filter((item) => item.session_id !== selectedSession.session_id), result.completion as WorkoutSessionCompletion],
     }));
-    setStatus(`Session marked ${statusValue}.`);
+    setStatus(`Session marked ${statusValue} and logged to Sheets.`);
   }
 
   async function toggleExercise(exercise: WorkoutExercise) {
