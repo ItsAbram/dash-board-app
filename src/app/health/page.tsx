@@ -41,6 +41,7 @@ export default function HealthPage() {
   const [syncWarnings, setSyncWarnings] = useState<WorkoutSyncWarning[]>([]);
   const [isBusy, setIsBusy] = useState(false);
   const [completionNotesBySession, setCompletionNotesBySession] = useState<Record<string, string>>({});
+  const [expandedExercises, setExpandedExercises] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
     if (!supabase) return;
@@ -412,66 +413,103 @@ export default function HealthPage() {
                     const exerciseSets = data.exerciseSets
                       .filter((set) => set.exercise_id === exercise.exercise_id)
                       .sort((a, b) => a.set_number - b.set_number);
+                    const isExpanded = expandedExercises[exercise.exercise_id] ?? false;
+                    const doneSets = exerciseSets.filter((set) => set.done).length;
+                    const setSummary = exerciseSets.length ? `${doneSets}/${exerciseSets.length} sets` : "No sets";
                     return (
                       <div
-                        className={`grid gap-2 rounded-lg border p-3 text-left ${
+                        className={`grid gap-2 rounded-lg border p-2 text-left ${
                           completion?.done ? "border-[#22c55e] bg-[#142317]" : "border-[#3a3a3a] bg-[#151515]"
                         }`}
                         key={exercise.exercise_id}
                       >
-                        <span className="flex items-start justify-between gap-3">
-                          <span>
-                            <strong className="block text-sm font-black uppercase">{exercise.exercise_name}</strong>
-                            <span className="mt-1 block text-xs uppercase text-[#a1a1aa]">
-                              Plan: {exercise.sets || "-"} sets / {exercise.reps || "-"} reps / {exercise.target_load || "no load target"}
+                        <span className="grid gap-2 sm:grid-cols-[1fr_auto_auto] sm:items-center">
+                          <span className="min-w-0">
+                            <span className="flex flex-wrap items-baseline gap-x-2 gap-y-1">
+                              <strong className="text-sm font-black uppercase">{exercise.exercise_name}</strong>
+                              <span className="text-[11px] uppercase text-[#a1a1aa]">
+                                Plan: {exercise.sets || "-"} x {exercise.reps || "-"} @ {exercise.target_load || "-"}
+                              </span>
                             </span>
+                            <span className="mt-1 block text-[11px] uppercase text-[#f59e0b]">{setSummary}</span>
                           </span>
+                          <button
+                            className="outline-action min-h-8 px-2"
+                            onClick={() => setExpandedExercises((current) => ({ ...current, [exercise.exercise_id]: !isExpanded }))}
+                            type="button"
+                          >
+                            {isExpanded ? "Hide" : "Open"}
+                          </button>
                           <button className="outline-action min-h-8 px-2" onClick={() => toggleExercise(exercise)} type="button">
                             {completion?.done ? "Unmark" : "Done"}
                           </button>
                         </span>
-                        <div className="grid gap-1">
-                          {exerciseSets.map((set) => (
-                            <div className="grid grid-cols-[48px_70px_1fr_1fr_1fr_34px_34px] items-end gap-1" key={set.set_id}>
-                              <button
-                                className={`min-h-9 rounded-md border px-2 text-[10px] font-black uppercase ${
-                                  set.done ? "border-[#22c55e] bg-[#142317] text-[#86efac]" : "border-[#3a3a3a] bg-[#111111] text-[#a1a1aa]"
-                                }`}
-                                onClick={() => updateExerciseSet(set, { done: !set.done })}
-                                type="button"
-                              >
-                                {set.set_number}
+
+                        {isExpanded ? (
+                          <>
+                            <div className="grid gap-1">
+                              {exerciseSets.map((set) => (
+                                <div className="grid grid-cols-[48px_70px_1fr_1fr_1fr_34px_34px] items-end gap-1" key={set.set_id}>
+                                  <button
+                                    className={`min-h-9 rounded-md border px-2 text-[10px] font-black uppercase ${
+                                      set.done ? "border-[#22c55e] bg-[#142317] text-[#86efac]" : "border-[#3a3a3a] bg-[#111111] text-[#a1a1aa]"
+                                    }`}
+                                    onClick={() => updateExerciseSet(set, { done: !set.done })}
+                                    type="button"
+                                  >
+                                    {set.set_number}
+                                  </button>
+                                  <select
+                                    className="min-h-9 rounded-md border border-[#3a3a3a] bg-[#111111] px-1 text-[10px] uppercase text-[#f4f4f5] outline-none focus:border-[#f59e0b]"
+                                    onChange={(event) => updateExerciseSet(set, { set_type: event.target.value as WorkoutExerciseSet["set_type"] })}
+                                    value={set.set_type}
+                                  >
+                                    <option value="warmup">Warm</option>
+                                    <option value="work">Work</option>
+                                  </select>
+                                  <SetField label="Reps" value={set.reps} onChange={(value) => updateExerciseSet(set, { reps: value })} />
+                                  <SetField label="Load" value={set.load} onChange={(value) => updateExerciseSet(set, { load: value })} />
+                                  <SetField label="RPE" value={set.rpe} onChange={(value) => updateExerciseSet(set, { rpe: value })} />
+                                  <button className="outline-action min-h-9 px-1" onClick={() => updateExerciseSet(set, { done: !set.done })} type="button">
+                                    OK
+                                  </button>
+                                  <button className="outline-action min-h-9 border-[#ef4444] px-1 text-[#ef4444]" onClick={() => deleteExerciseSet(set)} type="button">
+                                    X
+                                  </button>
+                                </div>
+                              ))}
+                              {!exerciseSets.length ? <p className="rounded-md border border-[#3a3a3a] bg-[#111111] p-2 text-xs uppercase text-[#a1a1aa]">No actual sets yet.</p> : null}
+                            </div>
+                            <div className="grid grid-cols-2 gap-2">
+                              <button className="outline-action min-h-8 px-2" onClick={() => addExerciseSet(exercise, "warmup")} type="button">
+                                + Warmup
                               </button>
-                              <select
-                                className="min-h-9 rounded-md border border-[#3a3a3a] bg-[#111111] px-1 text-[10px] uppercase text-[#f4f4f5] outline-none focus:border-[#f59e0b]"
-                                onChange={(event) => updateExerciseSet(set, { set_type: event.target.value as WorkoutExerciseSet["set_type"] })}
-                                value={set.set_type}
-                              >
-                                <option value="warmup">Warm</option>
-                                <option value="work">Work</option>
-                              </select>
-                              <SetField label="Reps" value={set.reps} onChange={(value) => updateExerciseSet(set, { reps: value })} />
-                              <SetField label="Load" value={set.load} onChange={(value) => updateExerciseSet(set, { load: value })} />
-                              <SetField label="RPE" value={set.rpe} onChange={(value) => updateExerciseSet(set, { rpe: value })} />
-                              <button className="outline-action min-h-9 px-1" onClick={() => updateExerciseSet(set, { done: !set.done })} type="button">
-                                OK
-                              </button>
-                              <button className="outline-action min-h-9 border-[#ef4444] px-1 text-[#ef4444]" onClick={() => deleteExerciseSet(set)} type="button">
-                                X
+                              <button className="outline-action min-h-8 px-2" onClick={() => addExerciseSet(exercise, "work")} type="button">
+                                + Set
                               </button>
                             </div>
-                          ))}
-                          {!exerciseSets.length ? <p className="rounded-md border border-[#3a3a3a] bg-[#111111] p-2 text-xs uppercase text-[#a1a1aa]">No actual sets yet.</p> : null}
-                        </div>
-                        <div className="grid grid-cols-2 gap-2">
-                          <button className="outline-action min-h-8 px-2" onClick={() => addExerciseSet(exercise, "warmup")} type="button">
-                            + Warmup
-                          </button>
-                          <button className="outline-action min-h-8 px-2" onClick={() => addExerciseSet(exercise, "work")} type="button">
-                            + Set
-                          </button>
-                        </div>
-                        {exercise.notes ? <span className="text-xs uppercase leading-relaxed text-[#a1a1aa]">{exercise.notes}</span> : null}
+                          </>
+                        ) : null}
+
+                        {!isExpanded && exerciseSets.length ? (
+                          <span className="flex flex-wrap gap-1">
+                            {exerciseSets.slice(0, 6).map((set) => (
+                              <span
+                                className={`rounded-md border px-2 py-1 text-[10px] font-black uppercase ${
+                                  set.done ? "border-[#22c55e] text-[#86efac]" : "border-[#525252] text-[#a1a1aa]"
+                                }`}
+                                key={set.set_id}
+                              >
+                                {set.set_type === "warmup" ? "W" : "S"}
+                                {set.set_number}: {set.reps || "-"} x {set.load || "-"}
+                                {set.rpe ? ` @${set.rpe}` : ""}
+                              </span>
+                            ))}
+                            {exerciseSets.length > 6 ? <span className="rounded-md border border-[#525252] px-2 py-1 text-[10px] font-black uppercase text-[#a1a1aa]">+{exerciseSets.length - 6}</span> : null}
+                          </span>
+                        ) : null}
+
+                        {isExpanded && exercise.notes ? <span className="text-xs uppercase leading-relaxed text-[#a1a1aa]">{exercise.notes}</span> : null}
                       </div>
                     );
                   })}
