@@ -115,18 +115,18 @@ export function DashboardWorkspace({
       />
 
       <section className="grid gap-3 xl:grid-cols-[1fr_1fr_1fr]">
-        <Panel label="Health Workspace">
+        <Panel label="Workout Planning">
           <div className="grid gap-3">
             <p className="text-sm uppercase leading-relaxed text-[#a1a1aa]">
-              Workouts, health notes, and body metrics will live in their own workspace.
+              Create sessions, assign training days, build blocks, and keep workout notes in one workspace.
             </p>
             <Link
-              className="grid min-h-[132px] content-between rounded-lg border border-[#f59e0b] bg-[#2a2a2a] p-4 uppercase text-[#f4f4f5]"
+              className="grid min-h-[112px] content-start gap-3 rounded-lg border border-[#f59e0b] bg-[#2a2a2a] p-4 uppercase text-[#f4f4f5]"
               href="/health"
             >
               <span className="text-xs font-black tracking-wide text-[#f59e0b]">Open</span>
-              <strong className="text-2xl font-black leading-none">Workout + Health</strong>
-              <span className="text-xs text-[#a1a1aa]">Build plans, logs, recovery, and metrics</span>
+              <strong className="text-2xl font-black leading-none">Workout Planner</strong>
+              <span className="text-xs text-[#a1a1aa]">Create weeks, sessions, tags, and templates</span>
             </Link>
           </div>
         </Panel>
