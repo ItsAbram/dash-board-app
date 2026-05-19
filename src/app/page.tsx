@@ -141,8 +141,8 @@ export default function Home() {
   }
 
   return (
-    <main className="min-h-screen bg-[#071827] px-3 py-3 font-mono text-[#d9f3ff]">
-      <div className="mx-auto min-h-[calc(100vh-24px)] max-w-7xl rounded-lg border border-[#2d6f99] bg-[#071827] p-3">
+    <main className="min-h-screen bg-[#111111] px-3 py-3 font-mono text-[#f4f4f5]">
+      <div className="mx-auto min-h-[calc(100vh-24px)] max-w-7xl rounded-lg border border-[#3a3a3a] bg-[#111111] p-3">
         <DashboardWorkspace
           calendarDays={calendarDays}
           calendarMode={calendarMode}

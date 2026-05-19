@@ -13,20 +13,20 @@ type CalendarViewProps = {
 
 export function CalendarView({ days, mode, selectedLabel, onModeChange, onSelectDay, onPrevious, onNext, onToday }: CalendarViewProps) {
   return (
-    <section className="grid gap-3 rounded-lg border border-[#2d6f99] bg-[#0b2438] p-3">
+    <section className="grid gap-3 rounded-lg border border-[#3a3a3a] bg-[#1f1f1f] p-3">
       <div className="grid gap-3 md:grid-cols-[1fr_auto] md:items-center">
         <div>
-          <p className="text-xs font-black uppercase tracking-wide text-[#7dd3fc]">Calendar</p>
-          <h2 className="text-2xl font-black uppercase leading-none text-[#d9f3ff]">{selectedLabel}</h2>
+          <p className="text-xs font-black uppercase tracking-wide text-[#f59e0b]">Calendar</p>
+          <h2 className="text-2xl font-black uppercase leading-none text-[#f4f4f5]">{selectedLabel}</h2>
         </div>
         <div className="grid grid-cols-[auto_auto_auto_auto_auto] gap-2">
           <button className="outline-action min-h-9 px-3" type="button" onClick={onPrevious} aria-label="Previous calendar range">
             &lt;
           </button>
-          <button className={`outline-action min-h-9 px-3 ${mode === "week" ? "bg-[#7dd3fc] text-[#071827]" : ""}`} type="button" onClick={() => onModeChange("week")}>
+          <button className={`outline-action min-h-9 px-3 ${mode === "week" ? "bg-[#f59e0b] text-[#111111]" : ""}`} type="button" onClick={() => onModeChange("week")}>
             Week
           </button>
-          <button className={`outline-action min-h-9 px-3 ${mode === "month" ? "bg-[#7dd3fc] text-[#071827]" : ""}`} type="button" onClick={() => onModeChange("month")}>
+          <button className={`outline-action min-h-9 px-3 ${mode === "month" ? "bg-[#f59e0b] text-[#111111]" : ""}`} type="button" onClick={() => onModeChange("month")}>
             Month
           </button>
           <button className="outline-action min-h-9 px-3" type="button" onClick={onToday}>
@@ -42,19 +42,19 @@ export function CalendarView({ days, mode, selectedLabel, onModeChange, onSelect
         {days.map((day) => (
           <button
             className={`min-h-[104px] rounded-lg border p-2 text-left uppercase ${
-              day.isSelected ? "border-[#7dd3fc] bg-[#7dd3fc] text-[#071827]" : "border-[#2d6f99] bg-[#071827] text-[#d9f3ff]"
+              day.isSelected ? "border-[#f59e0b] bg-[#f59e0b] text-[#111111]" : "border-[#3a3a3a] bg-[#111111] text-[#f4f4f5]"
             }`}
             key={day.key}
             type="button"
             onClick={() => onSelectDay(day.key)}
           >
-            <span className={`block text-[10px] font-black ${day.isSelected ? "text-[#071827]" : "text-[#8fbad3]"}`}>{day.dayName}</span>
+            <span className={`block text-[10px] font-black ${day.isSelected ? "text-[#111111]" : "text-[#a1a1aa]"}`}>{day.dayName}</span>
             <strong className="block text-2xl leading-none">{day.dayNumber}</strong>
-            <span className={`block text-[10px] ${day.isSelected ? "text-[#071827]" : "text-[#8fbad3]"}`}>{day.monthName}</span>
-            <span className={`mt-3 block text-[10px] ${day.isSelected ? "text-[#071827]" : "text-[#8fbad3]"}`}>
+            <span className={`block text-[10px] ${day.isSelected ? "text-[#111111]" : "text-[#a1a1aa]"}`}>{day.monthName}</span>
+            <span className={`mt-3 block text-[10px] ${day.isSelected ? "text-[#111111]" : "text-[#a1a1aa]"}`}>
               {day.score}% habits
             </span>
-            <span className={`block text-[10px] ${day.isSelected ? "text-[#071827]" : "text-[#8fbad3]"}`}>{day.taskCount} tasks</span>
+            <span className={`block text-[10px] ${day.isSelected ? "text-[#111111]" : "text-[#a1a1aa]"}`}>{day.taskCount} tasks</span>
             {day.isToday ? <span className="mt-1 block text-[10px] font-black">Today</span> : null}
           </button>
         ))}

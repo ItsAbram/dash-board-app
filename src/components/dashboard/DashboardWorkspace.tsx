@@ -67,11 +67,11 @@ export function DashboardWorkspace({
 }: DashboardWorkspaceProps) {
   return (
     <section className="grid gap-3">
-      <header className="grid gap-3 rounded-lg border border-[#2d6f99] bg-[#0b2438] p-4 lg:grid-cols-[1fr_auto] lg:items-end">
+      <header className="grid gap-3 rounded-lg border border-[#3a3a3a] bg-[#1f1f1f] p-4 lg:grid-cols-[1fr_auto] lg:items-end">
         <div>
-          <p className="text-xs font-black uppercase tracking-wide text-[#7dd3fc]">Personal OS</p>
-          <h1 className="text-4xl font-black uppercase leading-none text-[#d9f3ff] md:text-6xl">Dash Board</h1>
-          <p className="mt-2 text-sm uppercase text-[#8fbad3]">Viewing {selectedDateLabel}. Today is {todayLabel}.</p>
+          <p className="text-xs font-black uppercase tracking-wide text-[#f59e0b]">Personal OS</p>
+          <h1 className="text-4xl font-black uppercase leading-none text-[#f4f4f5] md:text-6xl">Dash Board</h1>
+          <p className="mt-2 text-sm uppercase text-[#a1a1aa]">Viewing {selectedDateLabel}. Today is {todayLabel}.</p>
         </div>
         <div className="grid grid-cols-3 gap-2">
           <MetricTile label="Habits" value={`${stats.completedHabits}/${stats.totalHabits}`} />
@@ -94,16 +94,16 @@ export function DashboardWorkspace({
       <section className="grid gap-3 xl:grid-cols-[1fr_1fr_1fr]">
         <Panel label="Health Workspace">
           <div className="grid gap-3">
-            <p className="text-sm uppercase leading-relaxed text-[#8fbad3]">
+            <p className="text-sm uppercase leading-relaxed text-[#a1a1aa]">
               Workouts, health notes, and body metrics will live in their own workspace.
             </p>
             <Link
-              className="grid min-h-[132px] content-between rounded-lg border border-[#7dd3fc] bg-[#102f47] p-4 uppercase text-[#d9f3ff]"
+              className="grid min-h-[132px] content-between rounded-lg border border-[#f59e0b] bg-[#2a2a2a] p-4 uppercase text-[#f4f4f5]"
               href="/health"
             >
-              <span className="text-xs font-black tracking-wide text-[#7dd3fc]">Open</span>
+              <span className="text-xs font-black tracking-wide text-[#f59e0b]">Open</span>
               <strong className="text-2xl font-black leading-none">Workout + Health</strong>
-              <span className="text-xs text-[#8fbad3]">Build plans, logs, recovery, and metrics</span>
+              <span className="text-xs text-[#a1a1aa]">Build plans, logs, recovery, and metrics</span>
             </Link>
           </div>
         </Panel>
@@ -143,7 +143,7 @@ export function DashboardWorkspace({
                 onDelete={() => onDeleteTask(task.id)}
               />
             ))}
-            {dayTasks.length === 0 ? <p className="rounded-lg border border-[#2d6f99] bg-[#071827] p-3 text-sm uppercase text-[#8fbad3]">No tasks for this day.</p> : null}
+            {dayTasks.length === 0 ? <p className="rounded-lg border border-[#3a3a3a] bg-[#111111] p-3 text-sm uppercase text-[#a1a1aa]">No tasks for this day.</p> : null}
           </div>
         </Panel>
       </section>
@@ -154,8 +154,8 @@ export function DashboardWorkspace({
         <SecondaryModule label="Blockers" title={`${stats.openTasks} active`} detail="For now, open tasks are the blocker source." />
       </section>
 
-      <footer className="grid gap-2 rounded-lg border border-[#2d6f99] bg-[#0b2438] p-3 md:grid-cols-[1fr_auto] md:items-center">
-        <p className="text-xs uppercase text-[#8fbad3]">{status}</p>
+      <footer className="grid gap-2 rounded-lg border border-[#3a3a3a] bg-[#1f1f1f] p-3 md:grid-cols-[1fr_auto] md:items-center">
+        <p className="text-xs uppercase text-[#a1a1aa]">{status}</p>
         <div className="grid grid-cols-2 gap-2">
           <button className="outline-action px-3" type="button" onClick={onLoadCloud}>Load Cloud</button>
           <button className="outline-action px-3" type="button" onClick={onSaveCloud}>Save Cloud</button>
@@ -167,10 +167,10 @@ export function DashboardWorkspace({
 
 function SecondaryModule({ label, title, detail }: { label: string; title: string; detail: string }) {
   return (
-    <article className="rounded-lg border border-[#2d6f99] bg-[#102f47] p-3">
-      <p className="text-xs font-black uppercase tracking-wide text-[#7dd3fc]">{label}</p>
-      <strong className="mt-2 block text-xl font-black uppercase leading-tight text-[#d9f3ff]">{title}</strong>
-      <p className="mt-2 text-xs uppercase leading-relaxed text-[#8fbad3]">{detail}</p>
+    <article className="rounded-lg border border-[#3a3a3a] bg-[#2a2a2a] p-3">
+      <p className="text-xs font-black uppercase tracking-wide text-[#f59e0b]">{label}</p>
+      <strong className="mt-2 block text-xl font-black uppercase leading-tight text-[#f4f4f5]">{title}</strong>
+      <p className="mt-2 text-xs uppercase leading-relaxed text-[#a1a1aa]">{detail}</p>
     </article>
   );
 }
