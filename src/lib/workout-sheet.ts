@@ -32,25 +32,6 @@ export async function readWorkoutSheet() {
   return parseWorkoutSheet(rows);
 }
 
-export async function appendWorkoutCompletion(row: {
-  completed_at: string;
-  session_id: string;
-  status: "complete" | "skipped";
-  notes: string;
-  completed_exercises: string[];
-}) {
-  const { sheets, spreadsheetId } = getWorkoutSheetsClient();
-  await sheets.spreadsheets.values.append({
-    spreadsheetId,
-    range: "Completions!A:E",
-    valueInputOption: "USER_ENTERED",
-    insertDataOption: "INSERT_ROWS",
-    requestBody: {
-      values: [[row.completed_at, row.session_id, row.status, row.notes, row.completed_exercises.join(", ")]],
-    },
-  });
-}
-
 function getWorkoutSheetsClient() {
   const email = process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL;
   const key = process.env.GOOGLE_PRIVATE_KEY?.replace(/\\n/g, "\n");
@@ -63,7 +44,7 @@ function getWorkoutSheetsClient() {
   const auth = new google.auth.JWT({
     email,
     key,
-    scopes: ["https://www.googleapis.com/auth/spreadsheets"],
+    scopes: ["https://www.googleapis.com/auth/spreadsheets.readonly"],
   });
 
   const sheets = google.sheets({ version: "v4", auth });

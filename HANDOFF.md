@@ -198,7 +198,6 @@ Required Google Sheet tabs:
 - `Sessions`
 - `Exercises`
 - `Templates`
-- `Completions`
 
 Important setup:
 
@@ -206,7 +205,7 @@ Important setup:
 - Create/copy the Google Sheet from the template CSV files.
 - Share the Sheet with `GOOGLE_SERVICE_ACCOUNT_EMAIL`.
 - Set `GOOGLE_WORKOUT_SHEET_ID` from the Sheet URL.
-- The service account needs editor access if completion writeback is enabled.
+- Viewer access is enough because the app only reads plans from the sheet.
 
 ## Known Issues / Notes
 
