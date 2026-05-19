@@ -1,4 +1,5 @@
 import { FormEvent } from "react";
+import Link from "next/link";
 import { CalendarView } from "@/components/dashboard/CalendarView";
 import { MetricTile } from "@/components/ui/MetricTile";
 import { Panel } from "@/components/ui/Panel";
@@ -23,7 +24,6 @@ type DashboardWorkspaceProps = {
   onPreviousCalendar: () => void;
   onNextCalendar: () => void;
   onToday: () => void;
-  onFocusChange: (value: string) => void;
   onHabitTitleChange: (value: string) => void;
   onTaskTitleChange: (value: string) => void;
   onAddHabit: (event: FormEvent) => void;
@@ -54,7 +54,6 @@ export function DashboardWorkspace({
   onPreviousCalendar,
   onNextCalendar,
   onToday,
-  onFocusChange,
   onHabitTitleChange,
   onTaskTitleChange,
   onAddHabit,
@@ -68,11 +67,11 @@ export function DashboardWorkspace({
 }: DashboardWorkspaceProps) {
   return (
     <section className="grid gap-3">
-      <header className="grid gap-3 border border-[#9ccfed] bg-[#d8efff] p-4 lg:grid-cols-[1fr_auto] lg:items-end">
+      <header className="grid gap-3 rounded-lg border border-[#2d6f99] bg-[#0b2438] p-4 lg:grid-cols-[1fr_auto] lg:items-end">
         <div>
-          <p className="text-xs font-black uppercase tracking-wide text-[#0284c7]">Personal OS</p>
-          <h1 className="text-4xl font-black uppercase leading-none text-[#0b3558] md:text-6xl">Dash Board</h1>
-          <p className="mt-2 text-sm uppercase text-[#44789a]">Viewing {selectedDateLabel}. Today is {todayLabel}.</p>
+          <p className="text-xs font-black uppercase tracking-wide text-[#7dd3fc]">Personal OS</p>
+          <h1 className="text-4xl font-black uppercase leading-none text-[#d9f3ff] md:text-6xl">Dash Board</h1>
+          <p className="mt-2 text-sm uppercase text-[#8fbad3]">Viewing {selectedDateLabel}. Today is {todayLabel}.</p>
         </div>
         <div className="grid grid-cols-3 gap-2">
           <MetricTile label="Habits" value={`${stats.completedHabits}/${stats.totalHabits}`} />
@@ -93,13 +92,20 @@ export function DashboardWorkspace({
       />
 
       <section className="grid gap-3 xl:grid-cols-[1fr_1fr_1fr]">
-        <Panel label="Focus">
-          <input
-            className="field"
-            value={state.focus[selectedDateKey] || ""}
-            onChange={(event) => onFocusChange(event.target.value)}
-            placeholder="Set this day's one thing"
-          />
+        <Panel label="Health Workspace">
+          <div className="grid gap-3">
+            <p className="text-sm uppercase leading-relaxed text-[#8fbad3]">
+              Workouts, health notes, and body metrics will live in their own workspace.
+            </p>
+            <Link
+              className="grid min-h-[132px] content-between rounded-lg border border-[#7dd3fc] bg-[#102f47] p-4 uppercase text-[#d9f3ff]"
+              href="/health"
+            >
+              <span className="text-xs font-black tracking-wide text-[#7dd3fc]">Open</span>
+              <strong className="text-2xl font-black leading-none">Workout + Health</strong>
+              <span className="text-xs text-[#8fbad3]">Build plans, logs, recovery, and metrics</span>
+            </Link>
+          </div>
         </Panel>
 
         <Panel label="Habits">
@@ -137,7 +143,7 @@ export function DashboardWorkspace({
                 onDelete={() => onDeleteTask(task.id)}
               />
             ))}
-            {dayTasks.length === 0 ? <p className="border border-[#9ccfed] bg-[#eaf7ff] p-3 text-sm uppercase text-[#44789a]">No tasks for this day.</p> : null}
+            {dayTasks.length === 0 ? <p className="rounded-lg border border-[#2d6f99] bg-[#071827] p-3 text-sm uppercase text-[#8fbad3]">No tasks for this day.</p> : null}
           </div>
         </Panel>
       </section>
@@ -148,8 +154,8 @@ export function DashboardWorkspace({
         <SecondaryModule label="Blockers" title={`${stats.openTasks} active`} detail="For now, open tasks are the blocker source." />
       </section>
 
-      <footer className="grid gap-2 border border-[#9ccfed] bg-[#d8efff] p-3 md:grid-cols-[1fr_auto] md:items-center">
-        <p className="text-xs uppercase text-[#44789a]">{status}</p>
+      <footer className="grid gap-2 rounded-lg border border-[#2d6f99] bg-[#0b2438] p-3 md:grid-cols-[1fr_auto] md:items-center">
+        <p className="text-xs uppercase text-[#8fbad3]">{status}</p>
         <div className="grid grid-cols-2 gap-2">
           <button className="outline-action px-3" type="button" onClick={onLoadCloud}>Load Cloud</button>
           <button className="outline-action px-3" type="button" onClick={onSaveCloud}>Save Cloud</button>
@@ -161,10 +167,10 @@ export function DashboardWorkspace({
 
 function SecondaryModule({ label, title, detail }: { label: string; title: string; detail: string }) {
   return (
-    <article className="border border-[#9ccfed] bg-[#c7e8fb] p-3">
-      <p className="text-xs font-black uppercase tracking-wide text-[#0284c7]">{label}</p>
-      <strong className="mt-2 block text-xl font-black uppercase leading-tight text-[#0b3558]">{title}</strong>
-      <p className="mt-2 text-xs uppercase leading-relaxed text-[#44789a]">{detail}</p>
+    <article className="rounded-lg border border-[#2d6f99] bg-[#102f47] p-3">
+      <p className="text-xs font-black uppercase tracking-wide text-[#7dd3fc]">{label}</p>
+      <strong className="mt-2 block text-xl font-black uppercase leading-tight text-[#d9f3ff]">{title}</strong>
+      <p className="mt-2 text-xs uppercase leading-relaxed text-[#8fbad3]">{detail}</p>
     </article>
   );
 }

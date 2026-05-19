@@ -58,10 +58,6 @@ export default function Home() {
     };
   }, [dayTasks, selectedDateKey, state.habits]);
 
-  function setFocus(value: string) {
-    setState({ ...state, focus: { ...state.focus, [selectedDateKey]: value } });
-  }
-
   function addHabit(event: FormEvent) {
     event.preventDefault();
     const title = habitTitle.trim();
@@ -145,8 +141,8 @@ export default function Home() {
   }
 
   return (
-    <main className="min-h-screen bg-[#eaf7ff] px-3 py-3 font-mono text-[#0b3558]">
-      <div className="mx-auto min-h-[calc(100vh-24px)] max-w-7xl border border-[#9ccfed] bg-[#eaf7ff] p-3">
+    <main className="min-h-screen bg-[#071827] px-3 py-3 font-mono text-[#d9f3ff]">
+      <div className="mx-auto min-h-[calc(100vh-24px)] max-w-7xl rounded-lg border border-[#2d6f99] bg-[#071827] p-3">
         <DashboardWorkspace
           calendarDays={calendarDays}
           calendarMode={calendarMode}
@@ -158,7 +154,6 @@ export default function Home() {
           onCalendarModeChange={setCalendarMode}
           onDeleteHabit={deleteHabit}
           onDeleteTask={deleteTask}
-          onFocusChange={setFocus}
           onHabitTitleChange={setHabitTitle}
           onLoadCloud={loadCloud}
           onNextCalendar={() => setSelectedDateKey((current) => shiftCalendar(current, calendarMode, 1))}
