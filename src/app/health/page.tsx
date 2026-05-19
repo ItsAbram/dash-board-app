@@ -81,6 +81,7 @@ export default function HealthPage() {
     if (!selectedSession) return null;
     return data.sessionCompletions.find((completion) => completion.session_id === selectedSession.session_id) ?? null;
   }, [data.sessionCompletions, selectedSession]);
+  const selectedSessionStatus = selectedCompletion?.status ?? null;
 
   const completionNotes = selectedSession
     ? completionNotesBySession[selectedSession.session_id] ?? selectedCompletion?.notes ?? ""
@@ -364,7 +365,7 @@ export default function HealthPage() {
                   >
                     <span className="flex items-center justify-between gap-2">
                       <span className="text-xs font-black uppercase text-[#a1a1aa]">{formatDate(workoutSession.date)}</span>
-                      <span className={`rounded-full border px-2 py-1 text-[10px] font-black uppercase ${completion ? "border-[#22c55e] text-[#86efac]" : "border-[#525252] text-[#d4d4d8]"}`}>
+                      <span className={`rounded-full border px-2 py-1 text-[10px] font-black uppercase ${sessionStatusClass(completion?.status)}`}>
                         {completion?.status ?? "planned"}
                       </span>
                     </span>
@@ -509,10 +510,16 @@ export default function HealthPage() {
                   />
                 </label>
                 <div className="grid grid-cols-2 gap-2">
-                  <button className="outline-action px-3" onClick={() => markSession("skipped")} type="button">
-                    Mark Skipped
-                  </button>
-                  {selectedCompletion ? (
+                  {selectedSessionStatus === "skipped" ? (
+                    <button className="outline-action border-[#ef4444] px-3 text-[#ef4444]" onClick={unmarkSession} type="button">
+                      Unmark Session
+                    </button>
+                  ) : (
+                    <button className="outline-action px-3" onClick={() => markSession("skipped")} type="button">
+                      Mark Skipped
+                    </button>
+                  )}
+                  {selectedSessionStatus === "complete" ? (
                     <button className="outline-action border-[#ef4444] px-3 text-[#ef4444]" onClick={unmarkSession} type="button">
                       Unmark Session
                     </button>
@@ -553,6 +560,12 @@ function SetField({ label, value, onChange }: { label: string; value: string; on
       />
     </label>
   );
+}
+
+function sessionStatusClass(status?: "complete" | "skipped") {
+  if (status === "complete") return "border-[#22c55e] bg-[#142317] text-[#86efac]";
+  if (status === "skipped") return "border-[#ef4444] bg-[#2b1515] text-[#fca5a5]";
+  return "border-[#525252] text-[#d4d4d8]";
 }
 
 function buildCollapsedSetSummary(sets: WorkoutExerciseSet[], doneSets: number) {
