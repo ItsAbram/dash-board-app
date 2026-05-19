@@ -73,11 +73,17 @@ export async function POST(request: Request) {
       warnings: parsed.warnings,
     });
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Workout sync failed.";
+    const message = getErrorMessage(error);
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }
 
 function escapePostgrestValue(value: string) {
   return `"${value.replaceAll('"', '\\"')}"`;
+}
+
+function getErrorMessage(error: unknown) {
+  if (error instanceof Error) return error.message;
+  if (error && typeof error === "object" && "message" in error && typeof error.message === "string") return error.message;
+  return "Workout sync failed.";
 }
