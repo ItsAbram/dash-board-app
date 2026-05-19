@@ -415,7 +415,7 @@ export default function HealthPage() {
                       .sort((a, b) => a.set_number - b.set_number);
                     const isExpanded = expandedExercises[exercise.exercise_id] ?? false;
                     const doneSets = exerciseSets.filter((set) => set.done).length;
-                    const setSummary = exerciseSets.length ? `${doneSets}/${exerciseSets.length} sets` : "No sets";
+                    const setSummary = buildCollapsedSetSummary(exerciseSets, doneSets);
                     return (
                       <div
                         className={`grid gap-2 rounded-lg border p-2 text-left ${
@@ -431,7 +431,7 @@ export default function HealthPage() {
                                 Plan: {exercise.sets || "-"} x {exercise.reps || "-"} @ {exercise.target_load || "-"}
                               </span>
                             </span>
-                            <span className="mt-1 block text-[11px] uppercase text-[#f59e0b]">{setSummary}</span>
+                            <span className="mt-1 block truncate text-[11px] uppercase text-[#f59e0b]" title={setSummary}>{setSummary}</span>
                           </span>
                           <button
                             className="outline-action min-h-8 px-2"
@@ -489,36 +489,6 @@ export default function HealthPage() {
                               </button>
                             </div>
                           </>
-                        ) : null}
-
-                        {!isExpanded && exerciseSets.length ? (
-                          <span className="grid gap-1">
-                            <span className="flex flex-wrap gap-1">
-                              {exerciseSets.slice(0, 5).map((set) => (
-                                <span
-                                  className={`rounded-md border px-2 py-1 text-[10px] font-black uppercase ${
-                                    set.done ? "border-[#22c55e] text-[#86efac]" : "border-[#525252] text-[#a1a1aa]"
-                                  }`}
-                                  key={set.set_id}
-                                >
-                                  {set.set_type === "warmup" ? "W" : "S"}
-                                  {set.set_number}: {set.reps || "-"} x {set.load || "-"}
-                                  {set.rpe ? ` @${set.rpe}` : ""}
-                                </span>
-                              ))}
-                            </span>
-                            {exerciseSets.length > 5 ? (
-                              <span
-                                className="rounded-md border border-[#525252] bg-[#111111] px-2 py-1 text-[10px] font-black uppercase text-[#a1a1aa]"
-                                title={exerciseSets
-                                  .slice(5)
-                                  .map((set) => `${set.set_type === "warmup" ? "W" : "S"}${set.set_number}: ${set.reps || "-"} x ${set.load || "-"}${set.rpe ? ` @${set.rpe}` : ""}`)
-                                  .join(", ")}
-                              >
-                                {exerciseSets.length - 5} more sets hidden. Open to edit all.
-                              </span>
-                            ) : null}
-                          </span>
                         ) : null}
 
                         {isExpanded && exercise.notes ? <span className="text-xs uppercase leading-relaxed text-[#a1a1aa]">{exercise.notes}</span> : null}
@@ -585,6 +555,34 @@ function SetField({ label, value, onChange }: { label: string; value: string; on
       />
     </label>
   );
+}
+
+function buildCollapsedSetSummary(sets: WorkoutExerciseSet[], doneSets: number) {
+  if (!sets.length) return "No sets logged";
+
+  const warmups = sets.filter((set) => set.set_type === "warmup").length;
+  const workSets = sets.filter((set) => set.set_type === "work");
+  const workSummary = summarizeWorkSets(workSets);
+  const warmupLabel = warmups ? `${warmups} warmup${warmups === 1 ? "" : "s"}` : "";
+  const doneLabel = `${doneSets}/${sets.length} done`;
+
+  return [workSummary, warmupLabel, doneLabel].filter(Boolean).join(" · ");
+}
+
+function summarizeWorkSets(sets: WorkoutExerciseSet[]) {
+  if (!sets.length) return "";
+
+  const grouped = new Map<string, { count: number; reps: string; load: string; rpe: string }>();
+  for (const set of sets) {
+    const key = `${set.reps}|${set.load}|${set.rpe}`;
+    const existing = grouped.get(key);
+    if (existing) existing.count += 1;
+    else grouped.set(key, { count: 1, reps: set.reps || "-", load: set.load || "-", rpe: set.rpe });
+  }
+
+  return [...grouped.values()]
+    .map((group) => `${group.count}x${group.reps} @ ${group.load}${group.rpe ? ` rpe ${group.rpe}` : ""}`)
+    .join(", ");
 }
 
 function formatDate(date: string) {
