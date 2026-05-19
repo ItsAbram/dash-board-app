@@ -2,7 +2,7 @@
 
 ## Current Goal
 
-Build a private personal operating-system dashboard that can be accessed from any device. It currently supports authentication, calendar/day navigation, habits, tasks, cloud sync, and a placeholder Health workspace.
+Build a private personal operating-system dashboard that can be accessed from any device. It currently supports authentication, calendar/day navigation, habits, tasks, cloud sync, and a spreadsheet-driven workout planner.
 
 ## Repo / Deployment
 
@@ -10,7 +10,7 @@ Build a private personal operating-system dashboard that can be accessed from an
 - GitHub repo: `https://github.com/ItsAbram/dash-board-app`
 - Branch: `main`
 - Vercel imports from GitHub and auto-deploys on push to `main`
-- Latest known commit at handoff: `5bb0dc8 Add automatic cloud sync`
+- Latest known commit at handoff: `e0bbd60 Test commit attribution`
 
 ## Stack
 
@@ -19,6 +19,7 @@ Build a private personal operating-system dashboard that can be accessed from an
 - TypeScript
 - Tailwind CSS v4
 - Supabase JS `^2.106.0`
+- Google APIs client `^166.0.0`
 - Node locally: `v24.15.0`
 - npm locally: `11.12.1`
 
@@ -168,7 +169,7 @@ type DashboardState = {
 };
 ```
 
-`focus` still exists in state for compatibility, but the dashboard no longer exposes a Focus input. The old Focus card was replaced by a Health Workspace button.
+`focus` still exists in state for compatibility, but the dashboard no longer exposes a Focus input. The old Focus card was replaced by a Workout Planner button.
 
 ## Workout Planner
 
@@ -192,6 +193,7 @@ Current status:
 - Actual lifting performance is stored as editable per-set rows in `workout_exercise_sets`.
 - Manual sync endpoint: `/api/workouts/sync`.
 - Sheet template CSV files live in `workout-sheet-template/`.
+- Sheet writeback was intentionally removed; completion data stays in Supabase for later analysis pages.
 
 Required Google Sheet tabs:
 
@@ -208,21 +210,30 @@ Important setup:
 - Set `GOOGLE_WORKOUT_SHEET_ID` from the Sheet URL.
 - Viewer access is enough because the app only reads plans from the sheet.
 
+Workout behavior:
+
+- `/health` loads synced blocks, sessions, exercises, session completions, exercise completions, and exercise set rows.
+- Exercises are collapsed by default to save space.
+- Opening an exercise reveals set rows with type, reps, load, RPE, done toggle, and delete.
+- Use `+ Warmup` and `+ Set` to add actual performed sets.
+- Session status supports planned, complete, and skipped; complete and skipped use different colors.
+- Session completion can be unmarked from the same action row.
+
 ## Known Issues / Notes
 
 - Supabase signup may show rate-limit errors if Create is pressed repeatedly. Wait before retrying.
 - If email confirmation is enabled, sign-in will fail until the email is confirmed.
 - Grammarly/browser extensions can cause hydration warnings by injecting body attributes. `suppressHydrationWarning` is set on `<body>` in `src/app/layout.tsx`.
-- Manual sync buttons remain as fallback even though auto-sync is active.
-- Data is still stored as one JSON blob. This is acceptable for early UX shaping but should eventually move to normalized Supabase tables.
+- Manual dashboard cloud sync buttons remain as fallback even though auto-sync is active.
+- Dashboard habits/tasks still use one JSON blob. Workout data now uses normalized Supabase tables.
+- Local `.env.local.example` may be missing if it was renamed to `.env.local` during setup; recreate it before committing env docs.
 
 ## Recommended Next Steps
 
-1. Run the updated Supabase schema in Supabase SQL Editor.
-2. Create the Google Sheet from `workout-sheet-template/`.
-3. Add Google service account env vars locally and in Vercel.
-4. Test `/health` manual Sync Sheet.
-5. Consider restricting auth to one allowed email if this remains a single-user private app.
+1. Add auto-create planned work sets from Sheet values when opening an exercise or starting a session.
+2. Add a focused "Start Session" mode that hides dashboard clutter while training.
+3. Add an analysis page that combines planned workouts, actual sets, completion status, and later recovery/nutrition data.
+4. Consider restricting auth to one allowed email if this remains a single-user private app.
 
 ## Verification Before Handoff
 
