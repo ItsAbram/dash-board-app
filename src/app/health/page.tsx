@@ -200,8 +200,46 @@ export default function HealthPage() {
       exercise_id: exercise.exercise_id,
       done: nextDone,
       completed_at: nextDone ? new Date().toISOString() : null,
+      actual_sets: existing?.actual_sets ?? exercise.sets,
+      actual_reps: existing?.actual_reps ?? exercise.reps,
+      actual_load: existing?.actual_load ?? exercise.target_load,
+      actual_rpe: existing?.actual_rpe ?? "",
       notes: existing?.notes ?? "",
       updated_at: new Date().toISOString(),
+    };
+
+    const { error } = await supabase.from("workout_exercise_completions").upsert(completion, { onConflict: "user_id,exercise_id" });
+    if (error) {
+      setStatus(`Save failed: ${error.message}`);
+      return;
+    }
+
+    setData((current) => ({
+      ...current,
+      exerciseCompletions: [...current.exerciseCompletions.filter((item) => item.exercise_id !== exercise.exercise_id), completion],
+    }));
+  }
+
+  async function updateExerciseActual(
+    exercise: WorkoutExercise,
+    field: "actual_sets" | "actual_reps" | "actual_load" | "actual_rpe",
+    value: string,
+  ) {
+    if (!supabase || !session?.user) return;
+
+    const existing = data.exerciseCompletions.find((completion) => completion.exercise_id === exercise.exercise_id);
+    const completion: WorkoutExerciseCompletion = {
+      user_id: session.user.id,
+      exercise_id: exercise.exercise_id,
+      done: existing?.done ?? false,
+      completed_at: existing?.completed_at ?? null,
+      actual_sets: existing?.actual_sets ?? exercise.sets,
+      actual_reps: existing?.actual_reps ?? exercise.reps,
+      actual_load: existing?.actual_load ?? exercise.target_load,
+      actual_rpe: existing?.actual_rpe ?? "",
+      notes: existing?.notes ?? "",
+      updated_at: new Date().toISOString(),
+      [field]: value,
     };
 
     const { error } = await supabase.from("workout_exercise_completions").upsert(completion, { onConflict: "user_id,exercise_id" });
@@ -338,25 +376,47 @@ export default function HealthPage() {
                   {selectedExercises.map((exercise) => {
                     const completion = data.exerciseCompletions.find((item) => item.exercise_id === exercise.exercise_id);
                     return (
-                      <button
+                      <div
                         className={`grid gap-2 rounded-lg border p-3 text-left ${
                           completion?.done ? "border-[#22c55e] bg-[#142317]" : "border-[#3a3a3a] bg-[#151515]"
                         }`}
                         key={exercise.exercise_id}
-                        onClick={() => toggleExercise(exercise)}
-                        type="button"
                       >
                         <span className="flex items-start justify-between gap-3">
                           <span>
                             <strong className="block text-sm font-black uppercase">{exercise.exercise_name}</strong>
                             <span className="mt-1 block text-xs uppercase text-[#a1a1aa]">
-                              {exercise.sets || "-"} sets / {exercise.reps || "-"} reps / {exercise.target_load || "no load target"}
+                              Plan: {exercise.sets || "-"} sets / {exercise.reps || "-"} reps / {exercise.target_load || "no load target"}
                             </span>
                           </span>
-                          <span className="text-xs font-black uppercase text-[#f59e0b]">{completion?.done ? "Unmark" : "Mark Done"}</span>
+                          <button className="outline-action min-h-8 px-2" onClick={() => toggleExercise(exercise)} type="button">
+                            {completion?.done ? "Unmark" : "Done"}
+                          </button>
                         </span>
+                        <div className="grid grid-cols-4 gap-2">
+                          <ActualField
+                            label="Sets"
+                            value={completion?.actual_sets ?? exercise.sets}
+                            onChange={(value) => updateExerciseActual(exercise, "actual_sets", value)}
+                          />
+                          <ActualField
+                            label="Reps"
+                            value={completion?.actual_reps ?? exercise.reps}
+                            onChange={(value) => updateExerciseActual(exercise, "actual_reps", value)}
+                          />
+                          <ActualField
+                            label="Load"
+                            value={completion?.actual_load ?? exercise.target_load}
+                            onChange={(value) => updateExerciseActual(exercise, "actual_load", value)}
+                          />
+                          <ActualField
+                            label="RPE"
+                            value={completion?.actual_rpe ?? ""}
+                            onChange={(value) => updateExerciseActual(exercise, "actual_rpe", value)}
+                          />
+                        </div>
                         {exercise.notes ? <span className="text-xs uppercase leading-relaxed text-[#a1a1aa]">{exercise.notes}</span> : null}
-                      </button>
+                      </div>
                     );
                   })}
                   {!selectedExercises.length ? <p className="rounded-lg border border-[#3a3a3a] bg-[#151515] p-3 text-sm uppercase text-[#a1a1aa]">No exercises for this session.</p> : null}
@@ -405,6 +465,19 @@ function Info({ label, value }: { label: string; value: string }) {
       <p className="text-xs font-black uppercase text-[#a1a1aa]">{label}</p>
       <p className="mt-1 text-sm font-black uppercase text-[#f4f4f5]">{value}</p>
     </div>
+  );
+}
+
+function ActualField({ label, value, onChange }: { label: string; value: string; onChange: (value: string) => void }) {
+  return (
+    <label className="grid gap-1 text-[10px] font-black uppercase text-[#a1a1aa]">
+      {label}
+      <input
+        className="min-h-9 min-w-0 rounded-md border border-[#3a3a3a] bg-[#111111] px-2 text-xs uppercase text-[#f4f4f5] outline-none focus:border-[#f59e0b]"
+        onChange={(event) => onChange(event.target.value)}
+        value={value}
+      />
+    </label>
   );
 }
 

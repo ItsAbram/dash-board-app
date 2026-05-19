@@ -102,10 +102,20 @@ create table if not exists public.workout_exercise_completions (
   exercise_id text not null,
   done boolean not null default false,
   completed_at timestamptz,
+  actual_sets text not null default '',
+  actual_reps text not null default '',
+  actual_load text not null default '',
+  actual_rpe text not null default '',
   notes text not null default '',
   updated_at timestamptz not null default now(),
   primary key (user_id, exercise_id)
 );
+
+alter table public.workout_exercise_completions
+add column if not exists actual_sets text not null default '',
+add column if not exists actual_reps text not null default '',
+add column if not exists actual_load text not null default '',
+add column if not exists actual_rpe text not null default '';
 
 alter table public.workout_blocks enable row level security;
 alter table public.workout_sessions enable row level security;
