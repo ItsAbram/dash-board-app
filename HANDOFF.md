@@ -189,6 +189,7 @@ Current status:
 - Spreadsheet-driven workout execution page.
 - Google Sheets is the planning/template source.
 - Supabase stores synced workout plans and completion/checkoff history.
+- Actual lifting performance is stored as editable per-set rows in `workout_exercise_sets`.
 - Manual sync endpoint: `/api/workouts/sync`.
 - Sheet template CSV files live in `workout-sheet-template/`.
 

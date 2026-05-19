@@ -6,6 +6,7 @@ import {
   WorkoutBlock,
   WorkoutExercise,
   WorkoutExerciseCompletion,
+  WorkoutExerciseSet,
   WorkoutSession,
   WorkoutSessionCompletion,
   WorkoutSyncResult,
@@ -20,6 +21,7 @@ type LoadState = {
   exercises: WorkoutExercise[];
   sessionCompletions: WorkoutSessionCompletion[];
   exerciseCompletions: WorkoutExerciseCompletion[];
+  exerciseSets: WorkoutExerciseSet[];
 };
 
 const emptyLoadState: LoadState = {
@@ -28,6 +30,7 @@ const emptyLoadState: LoadState = {
   exercises: [],
   sessionCompletions: [],
   exerciseCompletions: [],
+  exerciseSets: [],
 };
 
 export default function HealthPage() {
@@ -86,12 +89,13 @@ export default function HealthPage() {
     if (!supabase) return;
     setStatus("Loading synced workouts...");
 
-    const [blocksResult, sessionsResult, exercisesResult, sessionCompletionsResult, exerciseCompletionsResult] = await Promise.all([
+    const [blocksResult, sessionsResult, exercisesResult, sessionCompletionsResult, exerciseCompletionsResult, exerciseSetsResult] = await Promise.all([
       supabase.from("workout_blocks").select("*").eq("user_id", userId).order("start_date", { ascending: true }),
       supabase.from("workout_sessions").select("*").eq("user_id", userId).order("date", { ascending: true }),
       supabase.from("workout_exercises").select("*").eq("user_id", userId).order("order_index", { ascending: true }),
       supabase.from("workout_session_completions").select("*").eq("user_id", userId),
       supabase.from("workout_exercise_completions").select("*").eq("user_id", userId),
+      supabase.from("workout_exercise_sets").select("*").eq("user_id", userId).order("set_number", { ascending: true }),
     ]);
 
     const error =
@@ -99,7 +103,8 @@ export default function HealthPage() {
       sessionsResult.error ??
       exercisesResult.error ??
       sessionCompletionsResult.error ??
-      exerciseCompletionsResult.error;
+      exerciseCompletionsResult.error ??
+      exerciseSetsResult.error;
 
     if (error) {
       setStatus(`Load failed: ${error.message}`);
@@ -112,6 +117,7 @@ export default function HealthPage() {
       exercises: (exercisesResult.data ?? []) as WorkoutExercise[],
       sessionCompletions: (sessionCompletionsResult.data ?? []) as WorkoutSessionCompletion[],
       exerciseCompletions: (exerciseCompletionsResult.data ?? []) as WorkoutExerciseCompletion[],
+      exerciseSets: (exerciseSetsResult.data ?? []) as WorkoutExerciseSet[],
     };
 
     setData(nextData);
@@ -220,29 +226,26 @@ export default function HealthPage() {
     }));
   }
 
-  async function updateExerciseActual(
-    exercise: WorkoutExercise,
-    field: "actual_sets" | "actual_reps" | "actual_load" | "actual_rpe",
-    value: string,
-  ) {
+  async function addExerciseSet(exercise: WorkoutExercise, setType: WorkoutExerciseSet["set_type"]) {
     if (!supabase || !session?.user) return;
 
-    const existing = data.exerciseCompletions.find((completion) => completion.exercise_id === exercise.exercise_id);
-    const completion: WorkoutExerciseCompletion = {
+    const currentSets = data.exerciseSets.filter((set) => set.exercise_id === exercise.exercise_id);
+    const setNumber = currentSets.length ? Math.max(...currentSets.map((set) => set.set_number)) + 1 : 1;
+    const set: WorkoutExerciseSet = {
       user_id: session.user.id,
+      set_id: `${exercise.exercise_id}-${Date.now()}`,
       exercise_id: exercise.exercise_id,
-      done: existing?.done ?? false,
-      completed_at: existing?.completed_at ?? null,
-      actual_sets: existing?.actual_sets ?? exercise.sets,
-      actual_reps: existing?.actual_reps ?? exercise.reps,
-      actual_load: existing?.actual_load ?? exercise.target_load,
-      actual_rpe: existing?.actual_rpe ?? "",
-      notes: existing?.notes ?? "",
+      set_number: setNumber,
+      set_type: setType,
+      reps: setType === "work" ? exercise.reps : "",
+      load: setType === "work" ? exercise.target_load : "",
+      rpe: "",
+      done: false,
+      notes: "",
       updated_at: new Date().toISOString(),
-      [field]: value,
     };
 
-    const { error } = await supabase.from("workout_exercise_completions").upsert(completion, { onConflict: "user_id,exercise_id" });
+    const { error } = await supabase.from("workout_exercise_sets").upsert(set, { onConflict: "user_id,set_id" });
     if (error) {
       setStatus(`Save failed: ${error.message}`);
       return;
@@ -250,7 +253,38 @@ export default function HealthPage() {
 
     setData((current) => ({
       ...current,
-      exerciseCompletions: [...current.exerciseCompletions.filter((item) => item.exercise_id !== exercise.exercise_id), completion],
+      exerciseSets: [...current.exerciseSets, set],
+    }));
+  }
+
+  async function updateExerciseSet(set: WorkoutExerciseSet, patch: Partial<WorkoutExerciseSet>) {
+    if (!supabase) return;
+
+    const nextSet = { ...set, ...patch, updated_at: new Date().toISOString() };
+    const { error } = await supabase.from("workout_exercise_sets").upsert(nextSet, { onConflict: "user_id,set_id" });
+    if (error) {
+      setStatus(`Save failed: ${error.message}`);
+      return;
+    }
+
+    setData((current) => ({
+      ...current,
+      exerciseSets: current.exerciseSets.map((item) => (item.set_id === set.set_id ? nextSet : item)),
+    }));
+  }
+
+  async function deleteExerciseSet(set: WorkoutExerciseSet) {
+    if (!supabase || !session?.user) return;
+
+    const { error } = await supabase.from("workout_exercise_sets").delete().eq("user_id", session.user.id).eq("set_id", set.set_id);
+    if (error) {
+      setStatus(`Save failed: ${error.message}`);
+      return;
+    }
+
+    setData((current) => ({
+      ...current,
+      exerciseSets: current.exerciseSets.filter((item) => item.set_id !== set.set_id),
     }));
   }
 
@@ -375,6 +409,9 @@ export default function HealthPage() {
                   <p className="text-xs font-black uppercase tracking-wide text-[#f59e0b]">Exercises</p>
                   {selectedExercises.map((exercise) => {
                     const completion = data.exerciseCompletions.find((item) => item.exercise_id === exercise.exercise_id);
+                    const exerciseSets = data.exerciseSets
+                      .filter((set) => set.exercise_id === exercise.exercise_id)
+                      .sort((a, b) => a.set_number - b.set_number);
                     return (
                       <div
                         className={`grid gap-2 rounded-lg border p-3 text-left ${
@@ -393,27 +430,46 @@ export default function HealthPage() {
                             {completion?.done ? "Unmark" : "Done"}
                           </button>
                         </span>
-                        <div className="grid grid-cols-4 gap-2">
-                          <ActualField
-                            label="Sets"
-                            value={completion?.actual_sets ?? exercise.sets}
-                            onChange={(value) => updateExerciseActual(exercise, "actual_sets", value)}
-                          />
-                          <ActualField
-                            label="Reps"
-                            value={completion?.actual_reps ?? exercise.reps}
-                            onChange={(value) => updateExerciseActual(exercise, "actual_reps", value)}
-                          />
-                          <ActualField
-                            label="Load"
-                            value={completion?.actual_load ?? exercise.target_load}
-                            onChange={(value) => updateExerciseActual(exercise, "actual_load", value)}
-                          />
-                          <ActualField
-                            label="RPE"
-                            value={completion?.actual_rpe ?? ""}
-                            onChange={(value) => updateExerciseActual(exercise, "actual_rpe", value)}
-                          />
+                        <div className="grid gap-1">
+                          {exerciseSets.map((set) => (
+                            <div className="grid grid-cols-[48px_70px_1fr_1fr_1fr_34px_34px] items-end gap-1" key={set.set_id}>
+                              <button
+                                className={`min-h-9 rounded-md border px-2 text-[10px] font-black uppercase ${
+                                  set.done ? "border-[#22c55e] bg-[#142317] text-[#86efac]" : "border-[#3a3a3a] bg-[#111111] text-[#a1a1aa]"
+                                }`}
+                                onClick={() => updateExerciseSet(set, { done: !set.done })}
+                                type="button"
+                              >
+                                {set.set_number}
+                              </button>
+                              <select
+                                className="min-h-9 rounded-md border border-[#3a3a3a] bg-[#111111] px-1 text-[10px] uppercase text-[#f4f4f5] outline-none focus:border-[#f59e0b]"
+                                onChange={(event) => updateExerciseSet(set, { set_type: event.target.value as WorkoutExerciseSet["set_type"] })}
+                                value={set.set_type}
+                              >
+                                <option value="warmup">Warm</option>
+                                <option value="work">Work</option>
+                              </select>
+                              <SetField label="Reps" value={set.reps} onChange={(value) => updateExerciseSet(set, { reps: value })} />
+                              <SetField label="Load" value={set.load} onChange={(value) => updateExerciseSet(set, { load: value })} />
+                              <SetField label="RPE" value={set.rpe} onChange={(value) => updateExerciseSet(set, { rpe: value })} />
+                              <button className="outline-action min-h-9 px-1" onClick={() => updateExerciseSet(set, { done: !set.done })} type="button">
+                                OK
+                              </button>
+                              <button className="outline-action min-h-9 border-[#ef4444] px-1 text-[#ef4444]" onClick={() => deleteExerciseSet(set)} type="button">
+                                X
+                              </button>
+                            </div>
+                          ))}
+                          {!exerciseSets.length ? <p className="rounded-md border border-[#3a3a3a] bg-[#111111] p-2 text-xs uppercase text-[#a1a1aa]">No actual sets yet.</p> : null}
+                        </div>
+                        <div className="grid grid-cols-2 gap-2">
+                          <button className="outline-action min-h-8 px-2" onClick={() => addExerciseSet(exercise, "warmup")} type="button">
+                            + Warmup
+                          </button>
+                          <button className="outline-action min-h-8 px-2" onClick={() => addExerciseSet(exercise, "work")} type="button">
+                            + Set
+                          </button>
                         </div>
                         {exercise.notes ? <span className="text-xs uppercase leading-relaxed text-[#a1a1aa]">{exercise.notes}</span> : null}
                       </div>
@@ -468,7 +524,7 @@ function Info({ label, value }: { label: string; value: string }) {
   );
 }
 
-function ActualField({ label, value, onChange }: { label: string; value: string; onChange: (value: string) => void }) {
+function SetField({ label, value, onChange }: { label: string; value: string; onChange: (value: string) => void }) {
   return (
     <label className="grid gap-1 text-[10px] font-black uppercase text-[#a1a1aa]">
       {label}

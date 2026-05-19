@@ -58,6 +58,20 @@ export type WorkoutExerciseCompletion = {
   updated_at?: string;
 };
 
+export type WorkoutExerciseSet = {
+  user_id: string;
+  set_id: string;
+  exercise_id: string;
+  set_number: number;
+  set_type: "warmup" | "work";
+  reps: string;
+  load: string;
+  rpe: string;
+  done: boolean;
+  notes: string;
+  updated_at?: string;
+};
+
 export type WorkoutSyncWarning = {
   sheet: string;
   row: number;

@@ -117,17 +117,34 @@ add column if not exists actual_reps text not null default '',
 add column if not exists actual_load text not null default '',
 add column if not exists actual_rpe text not null default '';
 
+create table if not exists public.workout_exercise_sets (
+  user_id uuid not null references auth.users(id) on delete cascade,
+  set_id text not null,
+  exercise_id text not null,
+  set_number integer not null default 1,
+  set_type text not null default 'work' check (set_type in ('warmup', 'work')),
+  reps text not null default '',
+  load text not null default '',
+  rpe text not null default '',
+  done boolean not null default false,
+  notes text not null default '',
+  updated_at timestamptz not null default now(),
+  primary key (user_id, set_id)
+);
+
 alter table public.workout_blocks enable row level security;
 alter table public.workout_sessions enable row level security;
 alter table public.workout_exercises enable row level security;
 alter table public.workout_session_completions enable row level security;
 alter table public.workout_exercise_completions enable row level security;
+alter table public.workout_exercise_sets enable row level security;
 
 grant select, insert, update, delete on public.workout_blocks to authenticated;
 grant select, insert, update, delete on public.workout_sessions to authenticated;
 grant select, insert, update, delete on public.workout_exercises to authenticated;
 grant select, insert, update, delete on public.workout_session_completions to authenticated;
 grant select, insert, update, delete on public.workout_exercise_completions to authenticated;
+grant select, insert, update, delete on public.workout_exercise_sets to authenticated;
 
 drop policy if exists "users can read own workout blocks" on public.workout_blocks;
 drop policy if exists "users can insert own workout blocks" on public.workout_blocks;
@@ -153,6 +170,11 @@ drop policy if exists "users can read own workout exercise completions" on publi
 drop policy if exists "users can insert own workout exercise completions" on public.workout_exercise_completions;
 drop policy if exists "users can update own workout exercise completions" on public.workout_exercise_completions;
 drop policy if exists "users can delete own workout exercise completions" on public.workout_exercise_completions;
+
+drop policy if exists "users can read own workout exercise sets" on public.workout_exercise_sets;
+drop policy if exists "users can insert own workout exercise sets" on public.workout_exercise_sets;
+drop policy if exists "users can update own workout exercise sets" on public.workout_exercise_sets;
+drop policy if exists "users can delete own workout exercise sets" on public.workout_exercise_sets;
 
 create policy "users can read own workout blocks"
 on public.workout_blocks for select to authenticated
@@ -237,4 +259,21 @@ with check ((select auth.uid()) = user_id);
 
 create policy "users can delete own workout exercise completions"
 on public.workout_exercise_completions for delete to authenticated
+using ((select auth.uid()) = user_id);
+
+create policy "users can read own workout exercise sets"
+on public.workout_exercise_sets for select to authenticated
+using ((select auth.uid()) = user_id);
+
+create policy "users can insert own workout exercise sets"
+on public.workout_exercise_sets for insert to authenticated
+with check ((select auth.uid()) = user_id);
+
+create policy "users can update own workout exercise sets"
+on public.workout_exercise_sets for update to authenticated
+using ((select auth.uid()) = user_id)
+with check ((select auth.uid()) = user_id);
+
+create policy "users can delete own workout exercise sets"
+on public.workout_exercise_sets for delete to authenticated
 using ((select auth.uid()) = user_id);
