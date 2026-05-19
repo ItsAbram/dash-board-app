@@ -2,6 +2,7 @@
 
 import { ControlPanel } from "@/components/dashboard/ControlPanel";
 import { OperatorCanvas } from "@/components/dashboard/OperatorCanvas";
+import { buildCalendarDays, formatLongDate, shiftDateKey } from "@/lib/calendar";
 import { cloudRowId, createId, createStarterState, localStorageKey, normalizeState, todayKey } from "@/lib/dashboard-state";
 import { supabase } from "@/lib/supabase-client";
 import { DashboardState } from "@/types/dashboard";
@@ -15,6 +16,7 @@ export default function Home() {
   const [taskTitle, setTaskTitle] = useState("");
   const [status, setStatus] = useState("Local memory ready.");
   const [isLoaded, setIsLoaded] = useState(false);
+  const [selectedDateKey, setSelectedDateKey] = useState(todayKey);
 
   useEffect(() => {
     window.setTimeout(() => {
@@ -36,20 +38,15 @@ export default function Home() {
     }
   }, [isLoaded, state]);
 
-  const todayLabel = useMemo(
-    () =>
-      new Intl.DateTimeFormat(undefined, {
-        weekday: "long",
-        month: "short",
-        day: "numeric",
-      }).format(new Date()),
-    [],
-  );
+  const todayLabel = useMemo(() => formatLongDate(todayKey), []);
+  const selectedDateLabel = useMemo(() => formatLongDate(selectedDateKey), [selectedDateKey]);
+  const calendarDays = useMemo(() => buildCalendarDays(selectedDateKey, state), [selectedDateKey, state]);
+  const dayTasks = useMemo(() => state.tasks.filter((task) => task.dateKey === selectedDateKey), [selectedDateKey, state.tasks]);
 
   const stats = useMemo(() => {
-    const completedHabits = state.habits.filter((habit) => habit.checkins[todayKey]).length;
-    const openTasks = state.tasks.filter((task) => !task.done).length;
-    const completedTasks = state.tasks.length - openTasks;
+    const completedHabits = state.habits.filter((habit) => habit.checkins[selectedDateKey]).length;
+    const openTasks = dayTasks.filter((task) => !task.done).length;
+    const completedTasks = dayTasks.length - openTasks;
     const score = state.habits.length ? Math.round((completedHabits / state.habits.length) * 100) : 0;
 
     return {
@@ -59,10 +56,10 @@ export default function Home() {
       completedTasks,
       score,
     };
-  }, [state.habits, state.tasks]);
+  }, [dayTasks, selectedDateKey, state.habits]);
 
   function setFocus(value: string) {
-    setState({ ...state, focus: { ...state.focus, [todayKey]: value } });
+    setState({ ...state, focus: { ...state.focus, [selectedDateKey]: value } });
   }
 
   function addHabit(event: FormEvent) {
@@ -79,7 +76,7 @@ export default function Home() {
     if (!title) return;
     setState({
       ...state,
-      tasks: [{ id: createId(), title, done: false, createdAt: new Date().toISOString() }, ...state.tasks],
+      tasks: [{ id: createId(), title, done: false, createdAt: new Date().toISOString(), dateKey: selectedDateKey }, ...state.tasks],
     });
     setTaskTitle("");
   }
@@ -90,8 +87,8 @@ export default function Home() {
       habits: state.habits.map((habit) => {
         if (habit.id !== habitId) return habit;
         const checkins = { ...habit.checkins };
-        if (checkins[todayKey]) delete checkins[todayKey];
-        else checkins[todayKey] = new Date().toISOString();
+        if (checkins[selectedDateKey]) delete checkins[selectedDateKey];
+        else checkins[selectedDateKey] = new Date().toISOString();
         return { ...habit, checkins };
       }),
     });
@@ -150,8 +147,16 @@ export default function Home() {
   return (
     <main className="min-h-screen bg-[#eaf7ff] px-3 py-3 font-mono text-[#0b3558]">
       <section className="mx-auto grid min-h-[calc(100vh-24px)] max-w-7xl grid-rows-[auto_1fr] border border-[#9ccfed] bg-[#d8efff] lg:grid-cols-[1fr_390px] lg:grid-rows-1">
-        <OperatorCanvas cloudReady={Boolean(supabase)} focus={state.focus[todayKey] || ""} stats={stats} todayLabel={todayLabel} />
+        <OperatorCanvas
+          cloudReady={Boolean(supabase)}
+          focus={state.focus[selectedDateKey] || ""}
+          selectedDateLabel={selectedDateLabel}
+          stats={stats}
+          todayLabel={todayLabel}
+        />
         <ControlPanel
+          calendarDays={calendarDays}
+          dayTasks={dayTasks}
           habitTitle={habitTitle}
           onAddHabit={addHabit}
           onAddTask={addTask}
@@ -160,15 +165,20 @@ export default function Home() {
           onFocusChange={setFocus}
           onHabitTitleChange={setHabitTitle}
           onLoadCloud={loadCloud}
+          onNextWeek={() => setSelectedDateKey((current) => shiftDateKey(current, 7))}
+          onPreviousWeek={() => setSelectedDateKey((current) => shiftDateKey(current, -7))}
           onSaveCloud={saveCloud}
+          onSelectDay={setSelectedDateKey}
           onTaskTitleChange={setTaskTitle}
+          onToday={() => setSelectedDateKey(todayKey)}
           onToggleHabit={toggleHabit}
           onToggleTask={toggleTask}
+          selectedDateLabel={selectedDateLabel}
           state={state}
           stats={stats}
           status={status}
           taskTitle={taskTitle}
-          todayKey={todayKey}
+          todayKey={selectedDateKey}
           todayLabel={todayLabel}
         />
       </section>

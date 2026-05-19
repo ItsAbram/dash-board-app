@@ -2,16 +2,24 @@ import { FormEvent } from "react";
 import { MetricTile } from "@/components/ui/MetricTile";
 import { Panel } from "@/components/ui/Panel";
 import { ToggleListItem } from "@/components/ui/ToggleListItem";
-import { DashboardState, DashboardStats } from "@/types/dashboard";
+import { CalendarDay, DashboardState, DashboardStats, Task } from "@/types/dashboard";
+import { CalendarStrip } from "@/components/dashboard/CalendarStrip";
 
 type ControlPanelProps = {
   state: DashboardState;
+  dayTasks: Task[];
   stats: DashboardStats;
+  calendarDays: CalendarDay[];
   todayKey: string;
   todayLabel: string;
+  selectedDateLabel: string;
   status: string;
   habitTitle: string;
   taskTitle: string;
+  onSelectDay: (dateKey: string) => void;
+  onPreviousWeek: () => void;
+  onNextWeek: () => void;
+  onToday: () => void;
   onFocusChange: (value: string) => void;
   onHabitTitleChange: (value: string) => void;
   onTaskTitleChange: (value: string) => void;
@@ -27,12 +35,19 @@ type ControlPanelProps = {
 
 export function ControlPanel({
   state,
+  dayTasks,
   stats,
+  calendarDays,
   todayKey,
   todayLabel,
+  selectedDateLabel,
   status,
   habitTitle,
   taskTitle,
+  onSelectDay,
+  onPreviousWeek,
+  onNextWeek,
+  onToday,
   onFocusChange,
   onHabitTitleChange,
   onTaskTitleChange,
@@ -63,6 +78,15 @@ export function ControlPanel({
         <MetricTile label="Open" value={String(stats.openTasks)} />
         <MetricTile label="Done" value={String(stats.completedTasks)} />
       </div>
+
+      <CalendarStrip
+        days={calendarDays}
+        onNextWeek={onNextWeek}
+        onPreviousWeek={onPreviousWeek}
+        onSelectDay={onSelectDay}
+        onToday={onToday}
+        selectedLabel={selectedDateLabel}
+      />
 
       <Panel label="Today I Will">
         <input
@@ -102,7 +126,7 @@ export function ControlPanel({
           </button>
         </form>
         <div className="grid gap-2">
-          {state.tasks.map((task) => (
+          {dayTasks.map((task) => (
             <ToggleListItem
               key={task.id}
               title={task.title}

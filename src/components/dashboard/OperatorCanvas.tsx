@@ -3,17 +3,18 @@ import { DashboardStats } from "@/types/dashboard";
 
 type OperatorCanvasProps = {
   todayLabel: string;
+  selectedDateLabel: string;
   focus: string;
   stats: DashboardStats;
   cloudReady: boolean;
 };
 
-export function OperatorCanvas({ todayLabel, focus, stats, cloudReady }: OperatorCanvasProps) {
+export function OperatorCanvas({ todayLabel, selectedDateLabel, focus, stats, cloudReady }: OperatorCanvasProps) {
   return (
     <div className="relative min-h-[540px] border-b border-[#9ccfed] p-3 lg:min-h-0 lg:border-b-0 lg:border-r">
       <div className="grid h-full grid-cols-6 grid-rows-[0.9fr_1.1fr_1fr_1fr_1fr_1fr] gap-2 text-[#44789a]">
         <ConsoleBlock className="col-span-3 row-span-1" label="01 // Operator" title="Online" detail="Personal OS" />
-        <ConsoleBlock className="col-span-3 row-span-1" label="02 // Session" title={todayLabel} detail="Local time" />
+        <ConsoleBlock className="col-span-3 row-span-1" label="02 // Session" title={selectedDateLabel} detail={`Today is ${todayLabel}`} />
 
         <ConsoleBlock
           className="col-span-6 row-span-1"
