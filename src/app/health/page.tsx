@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { supabase } from "@/lib/supabase-client";
+import { getDefaultWorkoutBlockId } from "@/lib/workout-analysis";
 import {
   WorkoutBlock,
   WorkoutExercise,
@@ -42,6 +43,7 @@ export default function HealthPage() {
   const [isBusy, setIsBusy] = useState(false);
   const [completionNotesBySession, setCompletionNotesBySession] = useState<Record<string, string>>({});
   const [expandedExercises, setExpandedExercises] = useState<Record<string, boolean>>({});
+  const [selectedBlockId, setSelectedBlockId] = useState("");
 
   useEffect(() => {
     if (!supabase) return;
@@ -74,8 +76,17 @@ export default function HealthPage() {
 
   const currentBlock = useMemo(() => {
     const today = new Date().toISOString().slice(0, 10);
-    return data.blocks.find((block) => block.start_date <= today && block.end_date >= today) ?? data.blocks[0] ?? null;
-  }, [data.blocks]);
+    return (
+      data.blocks.find((block) => block.block_id === selectedBlockId) ??
+      data.blocks.find((block) => block.start_date <= today && block.end_date >= today) ??
+      data.blocks[0] ??
+      null
+    );
+  }, [data.blocks, selectedBlockId]);
+
+  const currentBlockIndex = currentBlock ? data.blocks.findIndex((block) => block.block_id === currentBlock.block_id) : -1;
+  const previousBlock = currentBlockIndex > 0 ? data.blocks[currentBlockIndex - 1] : null;
+  const nextBlock = currentBlockIndex >= 0 && currentBlockIndex < data.blocks.length - 1 ? data.blocks[currentBlockIndex + 1] : null;
 
   const visibleSessions = useMemo(() => {
     const blockSessions = currentBlock ? data.sessions.filter((workoutSession) => workoutSession.block_id === currentBlock.block_id) : data.sessions;
@@ -139,6 +150,7 @@ export default function HealthPage() {
     };
 
     setData(nextData);
+    setSelectedBlockId((current) => current || getDefaultWorkoutBlockId(nextData.blocks));
     setSelectedSessionId((current) => current || nextData.sessions[0]?.session_id || "");
     setStatus(nextData.sessions.length ? "Workouts loaded." : "No synced workouts yet. Run Sync Sheet after setup.");
   }
@@ -393,6 +405,51 @@ export default function HealthPage() {
             </div>
           </section>
         ) : null}
+
+        <section className="grid gap-3 rounded-lg border border-[#3a3a3a] bg-[#1f1f1f] p-3 lg:grid-cols-[1fr_auto] lg:items-end">
+          <div>
+            <p className="text-xs font-black uppercase tracking-wide text-[#f59e0b]">Training Block</p>
+            <h2 className="mt-1 text-2xl font-black uppercase leading-none">{currentBlock?.block_name ?? "No Block Loaded"}</h2>
+            <p className="mt-2 text-xs uppercase leading-relaxed text-[#a1a1aa]">
+              {currentBlock
+                ? `${formatDate(currentBlock.start_date)} - ${formatDate(currentBlock.end_date)} | ${currentBlock.goal || "No goal logged"}`
+                : "Sync the Sheet to choose a block."}
+            </p>
+          </div>
+          <div className="grid gap-2 sm:grid-cols-[auto_1fr_auto] lg:min-w-[520px]">
+            <button
+              className="outline-action px-3"
+              disabled={!previousBlock}
+              onClick={() => previousBlock && setSelectedBlockId(previousBlock.block_id)}
+              type="button"
+            >
+              Previous
+            </button>
+            <label className="grid gap-1 text-xs font-black uppercase text-[#a1a1aa]">
+              Select Block
+              <select
+                className="min-h-10 rounded-lg border border-[#3a3a3a] bg-[#111111] px-3 text-xs uppercase text-[#f4f4f5] outline-none focus:border-[#f59e0b]"
+                onChange={(event) => setSelectedBlockId(event.target.value)}
+                value={currentBlock?.block_id ?? ""}
+              >
+                {!data.blocks.length ? <option value="">No blocks synced</option> : null}
+                {data.blocks.map((block) => (
+                  <option key={block.block_id} value={block.block_id}>
+                    {block.block_name}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <button
+              className="outline-action px-3"
+              disabled={!nextBlock}
+              onClick={() => nextBlock && setSelectedBlockId(nextBlock.block_id)}
+              type="button"
+            >
+              Next
+            </button>
+          </div>
+        </section>
 
         <section className="grid gap-3 xl:grid-cols-[minmax(0,1.1fr)_minmax(420px,0.9fr)]">
           <section className="rounded-lg border border-[#3a3a3a] bg-[#1f1f1f] p-3">
