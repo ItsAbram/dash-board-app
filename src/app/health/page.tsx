@@ -492,20 +492,32 @@ export default function HealthPage() {
                         ) : null}
 
                         {!isExpanded && exerciseSets.length ? (
-                          <span className="flex flex-wrap gap-1">
-                            {exerciseSets.slice(0, 6).map((set) => (
+                          <span className="grid gap-1">
+                            <span className="flex flex-wrap gap-1">
+                              {exerciseSets.slice(0, 5).map((set) => (
+                                <span
+                                  className={`rounded-md border px-2 py-1 text-[10px] font-black uppercase ${
+                                    set.done ? "border-[#22c55e] text-[#86efac]" : "border-[#525252] text-[#a1a1aa]"
+                                  }`}
+                                  key={set.set_id}
+                                >
+                                  {set.set_type === "warmup" ? "W" : "S"}
+                                  {set.set_number}: {set.reps || "-"} x {set.load || "-"}
+                                  {set.rpe ? ` @${set.rpe}` : ""}
+                                </span>
+                              ))}
+                            </span>
+                            {exerciseSets.length > 5 ? (
                               <span
-                                className={`rounded-md border px-2 py-1 text-[10px] font-black uppercase ${
-                                  set.done ? "border-[#22c55e] text-[#86efac]" : "border-[#525252] text-[#a1a1aa]"
-                                }`}
-                                key={set.set_id}
+                                className="rounded-md border border-[#525252] bg-[#111111] px-2 py-1 text-[10px] font-black uppercase text-[#a1a1aa]"
+                                title={exerciseSets
+                                  .slice(5)
+                                  .map((set) => `${set.set_type === "warmup" ? "W" : "S"}${set.set_number}: ${set.reps || "-"} x ${set.load || "-"}${set.rpe ? ` @${set.rpe}` : ""}`)
+                                  .join(", ")}
                               >
-                                {set.set_type === "warmup" ? "W" : "S"}
-                                {set.set_number}: {set.reps || "-"} x {set.load || "-"}
-                                {set.rpe ? ` @${set.rpe}` : ""}
+                                {exerciseSets.length - 5} more sets hidden. Open to edit all.
                               </span>
-                            ))}
-                            {exerciseSets.length > 6 ? <span className="rounded-md border border-[#525252] px-2 py-1 text-[10px] font-black uppercase text-[#a1a1aa]">+{exerciseSets.length - 6}</span> : null}
+                            ) : null}
                           </span>
                         ) : null}
 
