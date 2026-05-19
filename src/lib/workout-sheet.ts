@@ -11,9 +11,9 @@ type ParsedWorkoutSheet = {
 };
 
 const requiredHeaders = {
-  Blocks: ["block_id", "block_name", "start_date", "end_date", "goal", "notes"],
-  Sessions: ["session_id", "block_id", "date", "session_name", "template_name", "priority", "estimated_minutes", "tags", "notes"],
-  Exercises: ["exercise_id", "session_id", "order", "exercise_name", "sets", "reps", "target_load", "notes"],
+  Blocks: ["block_id", "block_name", "start_date", "end_date"],
+  Sessions: ["session_id", "block_id", "date", "session_name"],
+  Exercises: ["exercise_id", "session_id", "exercise_name"],
 };
 
 export async function readWorkoutSheet() {
