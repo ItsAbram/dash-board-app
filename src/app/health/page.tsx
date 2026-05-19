@@ -169,6 +169,27 @@ export default function HealthPage() {
     setStatus(`Session marked ${statusValue}.`);
   }
 
+  async function unmarkSession() {
+    if (!supabase || !session?.user || !selectedSession) return;
+
+    const { error } = await supabase
+      .from("workout_session_completions")
+      .delete()
+      .eq("user_id", session.user.id)
+      .eq("session_id", selectedSession.session_id);
+
+    if (error) {
+      setStatus(`Save failed: ${error.message}`);
+      return;
+    }
+
+    setData((current) => ({
+      ...current,
+      sessionCompletions: current.sessionCompletions.filter((item) => item.session_id !== selectedSession.session_id),
+    }));
+    setStatus("Session unmarked.");
+  }
+
   async function toggleExercise(exercise: WorkoutExercise) {
     if (!supabase || !session?.user) return;
 
@@ -332,7 +353,7 @@ export default function HealthPage() {
                               {exercise.sets || "-"} sets / {exercise.reps || "-"} reps / {exercise.target_load || "no load target"}
                             </span>
                           </span>
-                          <span className="text-xs font-black uppercase text-[#f59e0b]">{completion?.done ? "Done" : "Open"}</span>
+                          <span className="text-xs font-black uppercase text-[#f59e0b]">{completion?.done ? "Unmark" : "Mark Done"}</span>
                         </span>
                         {exercise.notes ? <span className="text-xs uppercase leading-relaxed text-[#a1a1aa]">{exercise.notes}</span> : null}
                       </button>
@@ -362,6 +383,11 @@ export default function HealthPage() {
                     Mark Complete
                   </button>
                 </div>
+                {selectedCompletion ? (
+                  <button className="outline-action border-[#ef4444] px-3 text-[#ef4444]" onClick={unmarkSession} type="button">
+                    Unmark Session
+                  </button>
+                ) : null}
               </>
             ) : (
               <p className="rounded-lg border border-[#3a3a3a] bg-[#151515] p-4 text-sm uppercase leading-relaxed text-[#a1a1aa]">Select a synced session to start checking it off.</p>
