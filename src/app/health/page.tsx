@@ -393,14 +393,15 @@ export default function HealthPage() {
               <>
                 <div>
                   <p className="text-xs font-black uppercase tracking-wide text-[#f59e0b]">Selected Session</p>
-                  <h2 className="mt-1 text-3xl font-black uppercase leading-none">{selectedSession.session_name}</h2>
+                  <div className="mt-1 grid gap-2 lg:grid-cols-[1fr_auto] lg:items-start">
+                    <h2 className="text-3xl font-black uppercase leading-none">{selectedSession.session_name}</h2>
+                    <div className="flex flex-wrap gap-1 lg:justify-end">
+                      <SessionChip label={formatDate(selectedSession.date)} />
+                      <SessionChip label={selectedSession.priority || "normal"} />
+                      <SessionChip label={selectedSession.estimated_minutes ? `${selectedSession.estimated_minutes} min` : "No time"} />
+                    </div>
+                  </div>
                   <p className="mt-2 text-xs uppercase leading-relaxed text-[#a1a1aa]">{selectedSession.notes || "No session notes."}</p>
-                </div>
-
-                <div className="grid gap-2 sm:grid-cols-3">
-                  <Info label="Date" value={formatDate(selectedSession.date)} />
-                  <Info label="Priority" value={selectedSession.priority || "normal"} />
-                  <Info label="Time" value={selectedSession.estimated_minutes ? `${selectedSession.estimated_minutes} min` : "-"} />
                 </div>
 
                 <section className="grid gap-2">
@@ -540,12 +541,11 @@ export default function HealthPage() {
   );
 }
 
-function Info({ label, value }: { label: string; value: string }) {
+function SessionChip({ label }: { label: string }) {
   return (
-    <div className="rounded-lg border border-[#3a3a3a] bg-[#151515] p-3">
-      <p className="text-xs font-black uppercase text-[#a1a1aa]">{label}</p>
-      <p className="mt-1 text-sm font-black uppercase text-[#f4f4f5]">{value}</p>
-    </div>
+    <span className="rounded-md border border-[#3a3a3a] bg-[#151515] px-2 py-1 text-[10px] font-black uppercase text-[#d4d4d8]">
+      {label}
+    </span>
   );
 }
 
