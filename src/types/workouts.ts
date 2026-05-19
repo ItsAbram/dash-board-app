@@ -50,10 +50,6 @@ export type WorkoutExerciseCompletion = {
   exercise_id: string;
   done: boolean;
   completed_at: string | null;
-  actual_sets: string;
-  actual_reps: string;
-  actual_load: string;
-  actual_rpe: string;
   notes: string;
   updated_at?: string;
 };

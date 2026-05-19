@@ -207,10 +207,6 @@ export default function HealthPage() {
       exercise_id: exercise.exercise_id,
       done: nextDone,
       completed_at: nextDone ? new Date().toISOString() : null,
-      actual_sets: existing?.actual_sets ?? exercise.sets,
-      actual_reps: existing?.actual_reps ?? exercise.reps,
-      actual_load: existing?.actual_load ?? exercise.target_load,
-      actual_rpe: existing?.actual_rpe ?? "",
       notes: existing?.notes ?? "",
       updated_at: new Date().toISOString(),
     };
@@ -427,6 +423,7 @@ export default function HealthPage() {
                           <span className="min-w-0">
                             <span className="flex flex-wrap items-baseline gap-x-2 gap-y-1">
                               <strong className="text-sm font-black uppercase">{exercise.exercise_name}</strong>
+                              {completion?.done ? <span className="text-[10px] font-black uppercase text-[#86efac]">Complete</span> : null}
                               <span className="text-[11px] uppercase text-[#a1a1aa]">
                                 Plan: {exercise.sets || "-"} x {exercise.reps || "-"} @ {exercise.target_load || "-"}
                               </span>
