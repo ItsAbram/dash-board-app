@@ -38,14 +38,14 @@ export function AuthPanel({
   }
 
   return (
-    <section className="grid gap-3 rounded-xl border border-[#3a3a3a] bg-[#1f1f1f] p-5 shadow-2xl shadow-black/30">
-      <div className="text-center">
+    <section className="grid gap-3 rounded-xl border border-[#3a3a3a] bg-[#1f1f1f] p-5 text-left shadow-2xl shadow-black/30">
+      <div>
         <p className="text-xs font-black uppercase tracking-wide text-[#f59e0b]">Account</p>
         <p className="mt-1 text-xs uppercase leading-relaxed text-[#a1a1aa]">Sign in before loading the dashboard.</p>
       </div>
-      <input className="field text-center" value={email} onChange={(event) => onEmailChange(event.target.value)} placeholder="Email" type="email" />
+      <input className="field" value={email} onChange={(event) => onEmailChange(event.target.value)} placeholder="Email" type="email" />
       <input
-        className="field text-center"
+        className="field"
         value={password}
         onChange={(event) => onPasswordChange(event.target.value)}
         placeholder="Password"
