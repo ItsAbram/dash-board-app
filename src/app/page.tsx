@@ -44,9 +44,20 @@ export default function Home() {
   useEffect(() => {
     if (!supabase) return;
 
-    supabase.auth.getSession().then(({ data }) => {
-      setSession(data.session);
-    });
+    supabase.auth
+      .getSession()
+      .then(({ data, error }) => {
+        if (error) {
+          setSession(null);
+          setAuthStatus(authMessage(error.message));
+          return;
+        }
+        setSession(data.session);
+      })
+      .catch((error: Error) => {
+        setSession(null);
+        setAuthStatus(authMessage(error.message));
+      });
 
     const { data } = supabase.auth.onAuthStateChange((_event, nextSession) => {
       setSession(nextSession);

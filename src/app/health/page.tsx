@@ -46,7 +46,23 @@ export default function HealthPage() {
   useEffect(() => {
     if (!supabase) return;
 
-    supabase.auth.getSession().then(({ data: authData }) => setSession(authData.session));
+    supabase.auth
+      .getSession()
+      .then(({ data: authData, error }) => {
+        if (error) {
+          setStatus(`Auth session failed: ${error.message}`);
+          setSession(null);
+          return;
+        }
+        setSession(authData.session);
+        if (!authData.session) {
+          setStatus("Open the main dashboard and sign in before syncing or checking off workouts.");
+        }
+      })
+      .catch((error: Error) => {
+        setStatus(`Auth session failed: ${error.message}`);
+        setSession(null);
+      });
     const { data: authListener } = supabase.auth.onAuthStateChange((_event, nextSession) => setSession(nextSession));
     return () => authListener.subscription.unsubscribe();
   }, []);
@@ -255,6 +271,44 @@ export default function HealthPage() {
     }));
   }
 
+  async function openExercise(exercise: WorkoutExercise, isExpanded: boolean) {
+    setExpandedExercises((current) => ({ ...current, [exercise.exercise_id]: !isExpanded }));
+    if (isExpanded || !supabase || !session?.user) return;
+
+    const currentSets = data.exerciseSets.filter((set) => set.exercise_id === exercise.exercise_id);
+    if (currentSets.length) return;
+
+    const plannedSetCount = parsePlannedSetCount(exercise.sets);
+    if (!plannedSetCount) return;
+
+    const now = new Date().toISOString();
+    const plannedSets: WorkoutExerciseSet[] = Array.from({ length: plannedSetCount }, (_, index) => ({
+      user_id: session.user.id,
+      set_id: `${exercise.exercise_id}-planned-${index + 1}`,
+      exercise_id: exercise.exercise_id,
+      set_number: index + 1,
+      set_type: "work",
+      reps: exercise.reps,
+      load: exercise.target_load,
+      rpe: "",
+      done: false,
+      notes: "",
+      updated_at: now,
+    }));
+
+    const { error } = await supabase.from("workout_exercise_sets").upsert(plannedSets, { onConflict: "user_id,set_id" });
+    if (error) {
+      setStatus(`Save failed: ${error.message}`);
+      return;
+    }
+
+    setData((current) => ({
+      ...current,
+      exerciseSets: [...current.exerciseSets, ...plannedSets],
+    }));
+    setStatus(`Added ${plannedSetCount} planned work set${plannedSetCount === 1 ? "" : "s"}.`);
+  }
+
   async function updateExerciseSet(set: WorkoutExerciseSet, patch: Partial<WorkoutExerciseSet>) {
     if (!supabase) return;
 
@@ -312,12 +366,15 @@ export default function HealthPage() {
               Plan blocks in Google Sheets, sync them here, then mark sessions and exercises off in the app.
             </p>
           </div>
-          <div className="grid gap-2 sm:grid-cols-[1fr_auto] xl:min-w-[520px]">
+          <div className="grid gap-2 sm:grid-cols-[1fr_auto_auto] xl:min-w-[620px]">
             <div className="rounded-lg border border-[#3a3a3a] bg-[#111111] p-3">
               <p className="text-xs font-black uppercase text-[#a1a1aa]">Current Block</p>
               <p className="mt-1 text-xl font-black uppercase leading-none">{currentBlock?.block_name ?? "No Block"}</p>
               <p className="mt-2 text-xs uppercase text-[#f59e0b]">{status}</p>
             </div>
+            <Link className="outline-action grid place-items-center px-4" href="/health/analysis">
+              Analysis
+            </Link>
             <button className="action px-4" disabled={isBusy} onClick={syncSheet} type="button">
               {isBusy ? "Syncing" : "Sync Sheet"}
             </button>
@@ -434,7 +491,7 @@ export default function HealthPage() {
                           </span>
                           <button
                             className="outline-action min-h-8 px-2"
-                            onClick={() => setExpandedExercises((current) => ({ ...current, [exercise.exercise_id]: !isExpanded }))}
+                            onClick={() => openExercise(exercise, isExpanded)}
                             type="button"
                           >
                             {isExpanded ? "Hide" : "Open"}
@@ -594,6 +651,15 @@ function summarizeWorkSets(sets: WorkoutExerciseSet[]) {
   return [...grouped.values()]
     .map((group) => `${group.count}x${group.reps} @ ${group.load}${group.rpe ? ` rpe ${group.rpe}` : ""}`)
     .join(", ");
+}
+
+function parsePlannedSetCount(value: string) {
+  const match = value.match(/\d+/);
+  if (!match) return 0;
+
+  const count = Number.parseInt(match[0], 10);
+  if (!Number.isFinite(count) || count < 1) return 0;
+  return Math.min(count, 20);
 }
 
 function formatDate(date: string) {
