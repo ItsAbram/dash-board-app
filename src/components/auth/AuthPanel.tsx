@@ -38,20 +38,20 @@ export function AuthPanel({
   }
 
   return (
-    <section className="grid gap-2 rounded-lg border border-[#3a3a3a] bg-[#1f1f1f] p-3">
-      <div>
+    <section className="grid gap-3 rounded-xl border border-[#3a3a3a] bg-[#1f1f1f] p-5 shadow-2xl shadow-black/30">
+      <div className="text-center">
         <p className="text-xs font-black uppercase tracking-wide text-[#f59e0b]">Account</p>
         <p className="mt-1 text-xs uppercase leading-relaxed text-[#a1a1aa]">Sign in before loading the dashboard.</p>
       </div>
-      <input className="field" value={email} onChange={(event) => onEmailChange(event.target.value)} placeholder="Email" type="email" />
+      <input className="field text-center" value={email} onChange={(event) => onEmailChange(event.target.value)} placeholder="Email" type="email" />
       <input
-        className="field"
+        className="field text-center"
         value={password}
         onChange={(event) => onPasswordChange(event.target.value)}
         placeholder="Password"
         type="password"
       />
-      <p className="min-h-5 text-xs uppercase leading-relaxed text-[#a1a1aa]">{status}</p>
+      <p className="min-h-5 text-center text-xs uppercase leading-relaxed text-[#a1a1aa]">{status}</p>
       <div className="grid grid-cols-2 gap-2">
         <button className="action" type="button" onClick={onSignIn} disabled={isBusy}>
           {isBusy ? "Signing in..." : "Sign In"}
