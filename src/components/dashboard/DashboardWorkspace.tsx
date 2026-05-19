@@ -1,5 +1,6 @@
 import { FormEvent } from "react";
 import Link from "next/link";
+import { AuthPanel } from "@/components/auth/AuthPanel";
 import { CalendarView } from "@/components/dashboard/CalendarView";
 import { MetricTile } from "@/components/ui/MetricTile";
 import { Panel } from "@/components/ui/Panel";
@@ -19,6 +20,15 @@ type DashboardWorkspaceProps = {
   habitTitle: string;
   taskTitle: string;
   cloudReady: boolean;
+  authEmail: string;
+  authPassword: string;
+  userEmail?: string;
+  isSignedIn: boolean;
+  onAuthEmailChange: (value: string) => void;
+  onAuthPasswordChange: (value: string) => void;
+  onSignIn: () => void;
+  onSignUp: () => void;
+  onSignOut: () => void;
   onCalendarModeChange: (mode: CalendarMode) => void;
   onSelectDay: (dateKey: string) => void;
   onPreviousCalendar: () => void;
@@ -49,6 +59,15 @@ export function DashboardWorkspace({
   habitTitle,
   taskTitle,
   cloudReady,
+  authEmail,
+  authPassword,
+  userEmail,
+  isSignedIn,
+  onAuthEmailChange,
+  onAuthPasswordChange,
+  onSignIn,
+  onSignUp,
+  onSignOut,
   onCalendarModeChange,
   onSelectDay,
   onPreviousCalendar,
@@ -161,6 +180,18 @@ export function DashboardWorkspace({
           <button className="outline-action px-3" type="button" onClick={onSaveCloud}>Save Cloud</button>
         </div>
       </footer>
+
+      <AuthPanel
+        email={authEmail}
+        isSignedIn={isSignedIn}
+        onEmailChange={onAuthEmailChange}
+        onPasswordChange={onAuthPasswordChange}
+        onSignIn={onSignIn}
+        onSignOut={onSignOut}
+        onSignUp={onSignUp}
+        password={authPassword}
+        userEmail={userEmail}
+      />
     </section>
   );
 }

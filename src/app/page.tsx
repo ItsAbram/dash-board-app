@@ -2,8 +2,9 @@
 
 import { DashboardWorkspace } from "@/components/dashboard/DashboardWorkspace";
 import { buildCalendarDays, formatLongDate, shiftCalendar } from "@/lib/calendar";
-import { cloudRowId, createId, createStarterState, localStorageKey, normalizeState, todayKey } from "@/lib/dashboard-state";
+import { createId, createStarterState, localStorageKey, normalizeState, todayKey } from "@/lib/dashboard-state";
 import { supabase } from "@/lib/supabase-client";
+import { Session } from "@supabase/supabase-js";
 import { CalendarMode, DashboardState } from "@/types/dashboard";
 import { FormEvent, useEffect, useMemo, useState } from "react";
 
@@ -17,6 +18,9 @@ export default function Home() {
   const [isLoaded, setIsLoaded] = useState(false);
   const [selectedDateKey, setSelectedDateKey] = useState(todayKey);
   const [calendarMode, setCalendarMode] = useState<CalendarMode>("week");
+  const [session, setSession] = useState<Session | null>(null);
+  const [authEmail, setAuthEmail] = useState("");
+  const [authPassword, setAuthPassword] = useState("");
 
   useEffect(() => {
     window.setTimeout(() => {
@@ -30,6 +34,22 @@ export default function Home() {
       }
       setIsLoaded(true);
     }, 0);
+  }, []);
+
+  useEffect(() => {
+    if (!supabase) return;
+
+    supabase.auth.getSession().then(({ data }) => {
+      setSession(data.session);
+    });
+
+    const { data } = supabase.auth.onAuthStateChange((_event, nextSession) => {
+      setSession(nextSession);
+    });
+
+    return () => {
+      data.subscription.unsubscribe();
+    };
   }, []);
 
   useEffect(() => {
@@ -105,16 +125,46 @@ export default function Home() {
     setState({ ...state, tasks: state.tasks.filter((task) => task.id !== taskId) });
   }
 
+  async function signUp() {
+    if (!supabase) {
+      setStatus("Supabase env vars are missing.");
+      return;
+    }
+
+    const { error } = await supabase.auth.signUp({ email: authEmail.trim(), password: authPassword });
+    setStatus(error ? `Sign up failed: ${error.message}` : "Account created. Check email if confirmation is enabled.");
+  }
+
+  async function signIn() {
+    if (!supabase) {
+      setStatus("Supabase env vars are missing.");
+      return;
+    }
+
+    const { error } = await supabase.auth.signInWithPassword({ email: authEmail.trim(), password: authPassword });
+    setStatus(error ? `Sign in failed: ${error.message}` : "Signed in.");
+  }
+
+  async function signOut() {
+    if (!supabase) return;
+    const { error } = await supabase.auth.signOut();
+    setStatus(error ? `Sign out failed: ${error.message}` : "Signed out.");
+  }
+
   async function saveCloud() {
     if (!supabase) {
       setStatus("Add Supabase env vars, then restart the dev server.");
+      return;
+    }
+    if (!session?.user) {
+      setStatus("Sign in before saving to cloud.");
       return;
     }
 
     setStatus("Saving to Supabase...");
     const { error } = await supabase
       .from("dashboard_state")
-      .upsert({ id: cloudRowId, data: state, updated_at: new Date().toISOString() });
+      .upsert({ id: session.user.id, user_id: session.user.id, data: state, updated_at: new Date().toISOString() });
 
     setStatus(error ? `Cloud save failed: ${error.message}` : "Saved to Supabase.");
   }
@@ -124,9 +174,13 @@ export default function Home() {
       setStatus("Add Supabase env vars, then restart the dev server.");
       return;
     }
+    if (!session?.user) {
+      setStatus("Sign in before loading cloud data.");
+      return;
+    }
 
     setStatus("Loading from Supabase...");
-    const { data, error } = await supabase.from("dashboard_state").select("data").eq("id", cloudRowId).maybeSingle();
+    const { data, error } = await supabase.from("dashboard_state").select("data").eq("id", session.user.id).maybeSingle();
     if (error) {
       setStatus(`Cloud load failed: ${error.message}`);
       return;
@@ -144,13 +198,18 @@ export default function Home() {
     <main className="min-h-screen bg-[#111111] px-3 py-3 font-mono text-[#f4f4f5]">
       <div className="mx-auto min-h-[calc(100vh-24px)] max-w-7xl rounded-lg border border-[#3a3a3a] bg-[#111111] p-3">
         <DashboardWorkspace
+          authEmail={authEmail}
+          authPassword={authPassword}
           calendarDays={calendarDays}
           calendarMode={calendarMode}
           cloudReady={Boolean(supabase)}
           dayTasks={dayTasks}
           habitTitle={habitTitle}
+          isSignedIn={Boolean(session?.user)}
           onAddHabit={addHabit}
           onAddTask={addTask}
+          onAuthEmailChange={setAuthEmail}
+          onAuthPasswordChange={setAuthPassword}
           onCalendarModeChange={setCalendarMode}
           onDeleteHabit={deleteHabit}
           onDeleteTask={deleteTask}
@@ -160,6 +219,9 @@ export default function Home() {
           onPreviousCalendar={() => setSelectedDateKey((current) => shiftCalendar(current, calendarMode, -1))}
           onSaveCloud={saveCloud}
           onSelectDay={setSelectedDateKey}
+          onSignIn={signIn}
+          onSignOut={signOut}
+          onSignUp={signUp}
           onTaskTitleChange={setTaskTitle}
           onToday={() => setSelectedDateKey(todayKey)}
           onToggleHabit={toggleHabit}
@@ -171,6 +233,7 @@ export default function Home() {
           status={status}
           taskTitle={taskTitle}
           todayLabel={todayLabel}
+          userEmail={session?.user.email}
         />
       </div>
     </main>
