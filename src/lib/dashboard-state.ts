@@ -1,6 +1,7 @@
 import { DashboardState } from "@/types/dashboard";
+import { toDateKey } from "@/lib/calendar";
 
-export const todayKey = new Date().toISOString().slice(0, 10);
+export const todayKey = toDateKey(new Date());
 export const localStorageKey = "dash-board-next-state-v1";
 export const cloudRowId = "main";
 
