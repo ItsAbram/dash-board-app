@@ -43,9 +43,13 @@ Required in Vercel and local `.env.local`:
 ```env
 NEXT_PUBLIC_SUPABASE_URL=...
 NEXT_PUBLIC_SUPABASE_ANON_KEY=...
+GOOGLE_SERVICE_ACCOUNT_EMAIL=...
+GOOGLE_PRIVATE_KEY=...
+GOOGLE_WORKOUT_SHEET_ID=...
 ```
 
 Use the Supabase Project URL and Publishable/Anon key. Do not use the service role key in the browser.
+Google credentials are server-only and are used by `/api/workouts/sync`.
 
 ## Supabase
 
@@ -166,7 +170,7 @@ type DashboardState = {
 
 `focus` still exists in state for compatibility, but the dashboard no longer exposes a Focus input. The old Focus card was replaced by a Health Workspace button.
 
-## Health Workspace
+## Workout Planner
 
 Route:
 
@@ -182,30 +186,25 @@ src/app/health/page.tsx
 
 Current status:
 
-- Placeholder page only.
-- Sections:
-  - Workout Log
-  - Readiness
-  - Health Metrics
-  - Next Build
+- Spreadsheet-driven workout execution page.
+- Google Sheets is the planning/template source.
+- Supabase stores synced workout plans and completion/checkoff history.
+- Manual sync endpoint: `/api/workouts/sync`.
+- Sheet template CSV files live in `workout-sheet-template/`.
 
-Recommended next product step:
+Required Google Sheet tabs:
 
-Build the first real Health workspace inside the current synced JSON state before creating separate database tables.
+- `Blocks`
+- `Sessions`
+- `Exercises`
+- `Templates`
 
-Suggested first health data:
+Important setup:
 
-- Daily health check-in:
-  - sleep hours
-  - energy 1-5
-  - soreness 1-5
-  - body weight
-  - notes
-- Workout log:
-  - workout name
-  - type: strength / cardio / mobility / rest
-  - completed toggle
-  - notes
+- Run `supabase-schema.sql` after pulling this version.
+- Create/copy the Google Sheet from the template CSV files.
+- Share the Sheet with `GOOGLE_SERVICE_ACCOUNT_EMAIL`.
+- Set `GOOGLE_WORKOUT_SHEET_ID` from the Sheet URL.
 
 ## Known Issues / Notes
 
@@ -217,16 +216,10 @@ Suggested first health data:
 
 ## Recommended Next Steps
 
-1. Build `/health` daily health check-in and workout log.
-2. Add those fields to `DashboardState` while still using the JSON sync row.
-3. Test auto-sync across two devices.
-4. Once UX is stable, migrate from JSON blob to real Supabase tables:
-   - `habits`
-   - `habit_checkins`
-   - `tasks`
-   - `workouts`
-   - `workout_entries`
-   - `health_checkins`
+1. Run the updated Supabase schema in Supabase SQL Editor.
+2. Create the Google Sheet from `workout-sheet-template/`.
+3. Add Google service account env vars locally and in Vercel.
+4. Test `/health` manual Sync Sheet.
 5. Consider restricting auth to one allowed email if this remains a single-user private app.
 
 ## Verification Before Handoff

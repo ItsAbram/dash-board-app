@@ -1,0 +1,4 @@
+session_id,block_id,date,session_name,template_name,priority,estimated_minutes,tags,notes
+session-2026-05-18,block-2026-05,2026-05-18,Lower Strength,Strength A,high,75,"Squat, Heavy",Anchor lower day.
+session-2026-05-19,block-2026-05,2026-05-19,Upper Hypertrophy,Upper B,normal,65,"Bench, Back",Keep shoulder work controlled.
+session-2026-05-20,block-2026-05,2026-05-20,Recovery,Recovery,low,30,"Mobility, Easy",Protect the rest of the week.
