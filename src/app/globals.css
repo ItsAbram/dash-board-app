@@ -63,8 +63,14 @@ button {
   min-height: 40px;
   border: 1px solid #f59e0b;
   border-radius: 8px;
+  background: transparent;
   color: #f59e0b;
   font-size: 0.76rem;
   font-weight: 900;
   text-transform: uppercase;
+}
+
+.outline-action.is-selected {
+  background: #f59e0b;
+  color: #111111;
 }

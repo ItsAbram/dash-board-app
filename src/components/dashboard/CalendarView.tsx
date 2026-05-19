@@ -23,10 +23,10 @@ export function CalendarView({ days, mode, selectedLabel, onModeChange, onSelect
           <button className="outline-action min-h-9 px-3" type="button" onClick={onPrevious} aria-label="Previous calendar range">
             &lt;
           </button>
-          <button className={`outline-action min-h-9 px-3 ${mode === "week" ? "bg-[#f59e0b] text-[#111111]" : ""}`} type="button" onClick={() => onModeChange("week")}>
+          <button className={`outline-action min-h-9 px-3 ${mode === "week" ? "is-selected" : ""}`} type="button" onClick={() => onModeChange("week")}>
             Week
           </button>
-          <button className={`outline-action min-h-9 px-3 ${mode === "month" ? "bg-[#f59e0b] text-[#111111]" : ""}`} type="button" onClick={() => onModeChange("month")}>
+          <button className={`outline-action min-h-9 px-3 ${mode === "month" ? "is-selected" : ""}`} type="button" onClick={() => onModeChange("month")}>
             Month
           </button>
           <button className="outline-action min-h-9 px-3" type="button" onClick={onToday}>
