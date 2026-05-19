@@ -90,6 +90,9 @@ export default function WorkoutAnalysisPage() {
 
   const activeBlockId = selectedBlockId || getDefaultWorkoutBlockId(data.blocks);
   const analysis = useMemo(() => buildWorkoutAnalysis(data, activeBlockId, liftFilter), [activeBlockId, data, liftFilter]);
+  const activeBlockIndex = data.blocks.findIndex((block) => block.block_id === activeBlockId);
+  const previousBlock = activeBlockIndex > 0 ? data.blocks[activeBlockIndex - 1] : null;
+  const nextBlock = activeBlockIndex >= 0 && activeBlockIndex < data.blocks.length - 1 ? data.blocks[activeBlockIndex + 1] : null;
   const maxWeeklyVolume = Math.max(1, ...analysis.weekSummaries.map((week) => Math.max(week.actualVolume, week.plannedVolume)));
   const maxLiftVolume = Math.max(1, ...analysis.liftSummaries.map((lift) => lift.volume));
 
@@ -213,6 +216,60 @@ export default function WorkoutAnalysisPage() {
               ))}
             </select>
           </label>
+        </section>
+
+        <section className="grid gap-3 rounded-lg border border-[#3a3a3a] bg-[#1f1f1f] p-3">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <div>
+              <p className="text-xs font-black uppercase tracking-wide text-[#f59e0b]">Block Switcher</p>
+              <h2 className="text-2xl font-black uppercase leading-none">
+                {data.blocks.length ? `Block ${activeBlockIndex + 1} of ${data.blocks.length}` : "No Blocks"}
+              </h2>
+            </div>
+            <div className="grid grid-cols-2 gap-2 sm:min-w-64">
+              <button
+                className="outline-action px-3"
+                disabled={!previousBlock}
+                onClick={() => previousBlock && setSelectedBlockId(previousBlock.block_id)}
+                type="button"
+              >
+                Previous
+              </button>
+              <button
+                className="outline-action px-3"
+                disabled={!nextBlock}
+                onClick={() => nextBlock && setSelectedBlockId(nextBlock.block_id)}
+                type="button"
+              >
+                Next
+              </button>
+            </div>
+          </div>
+          <div className="grid gap-2 md:grid-cols-3">
+            {data.blocks.map((block, index) => {
+              const isSelected = block.block_id === activeBlockId;
+              return (
+                <button
+                  className={`grid min-h-28 content-start gap-2 rounded-lg border p-3 text-left transition ${
+                    isSelected ? "border-[#f59e0b] bg-[#2a2a2a]" : "border-[#3a3a3a] bg-[#151515] hover:border-[#737373]"
+                  }`}
+                  key={block.block_id}
+                  onClick={() => setSelectedBlockId(block.block_id)}
+                  type="button"
+                >
+                  <span className="flex items-center justify-between gap-2">
+                    <span className="text-[10px] font-black uppercase text-[#f59e0b]">Block {index + 1}</span>
+                    {isSelected ? <span className="rounded-full border border-[#f59e0b] px-2 py-1 text-[10px] font-black uppercase text-[#f59e0b]">Selected</span> : null}
+                  </span>
+                  <strong className="text-sm font-black uppercase leading-tight">{block.block_name}</strong>
+                  <span className="text-xs uppercase leading-relaxed text-[#a1a1aa]">
+                    {formatDate(block.start_date)} - {formatDate(block.end_date)}
+                  </span>
+                </button>
+              );
+            })}
+            {!data.blocks.length ? <EmptyState label="No blocks synced yet. Use the workout logger to sync the Sheet." /> : null}
+          </div>
         </section>
 
         <section className="grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
